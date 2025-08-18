@@ -1,0 +1,181 @@
+<div class="text-center mx-4 sm:mx-8 lg:mx-36 p-6">
+  <h2 class="text-4xl font-bold m-10 text-center text-gray-800">
+    Nos produits
+  </h2>
+
+  <!-- Container des filtres -->
+  <div
+    class="w-full max-w-4xl mx-auto mb-8 bg-gray-50 rounded-xl shadow-sm overflow-hidden"
+  >
+    <!-- Header avec bouton toggle -->
+    <div
+      class="relative flex items-center justify-center p-4 bg-white border-b border-gray-200"
+    >
+      <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+        Filtres
+      </h3>
+      <button
+        (click)="toggleFiltres()"
+        class="absolute right-4 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+        [attr.aria-label]="
+          filtresVisibles ? 'Masquer les filtres' : 'Afficher les filtres'
+        "
+      >
+        <svg
+          class="w-4 h-4 transition-transform duration-200"
+          [class.rotate-180]="!filtresVisibles"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenu des filtres avec animation -->
+    <div
+      class="transition-all duration-300 ease-in-out"
+      [class.max-h-0]="!filtresVisibles"
+      [class.max-h-96]="filtresVisibles"
+      [class.opacity-0]="!filtresVisibles"
+      [class.opacity-100]="filtresVisibles"
+      style="overflow: hidden"
+    >
+      <div class="p-6">
+        <!-- Barre de recherche -->
+        <div class="mb-8">
+          <input
+            [(ngModel)]="recherche"
+            placeholder="Rechercher un produit..."
+            class="w-full max-w-md mx-auto p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center transition-all duration-200"
+          />
+        </div>
+
+        <!-- Filtres par type -->
+        <div class="relative mb-8">
+          <select
+            [(ngModel)]="typeSelectionne"
+            name="type"
+            id="type"
+            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer min-w-40 text-center"
+          >
+            <option value="">Choisir le type</option>
+            <option value="Chaussures">Chaussures</option>
+            <option value="Pantalon">Pantalon</option>
+            <option value="T-shirt">T-shirt</option>
+          </select>
+        </div>
+
+        <!-- Section filtre prix -->
+        <div class="w-full max-w-lg mx-auto">
+          <!-- Double Range Slider -->
+          <div class="relative mb-8">
+            <!-- Track background -->
+            <div class="h-2 bg-gray-300 rounded-full relative overflow-hidden">
+              <!-- Active range background -->
+              <div
+                class="h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full absolute transition-all duration-200 ease-out"
+                [style.left.%]="getLeftPercent()"
+                [style.width.%]="getWidthPercent()"
+              ></div>
+            </div>
+
+            <!-- Slider inputs avec classes personnalisées -->
+            <input
+              type="range"
+              [min]="minPrice"
+              [max]="maxPrice"
+              [(ngModel)]="prixMinSelect"
+              (input)="onMinChange($event)"
+              class="absolute top-0 left-0 w-full h-2 bg-transparent cursor-pointer slider-input"
+            />
+
+            <input
+              type="range"
+              [min]="minPrice"
+              [max]="maxPrice"
+              [(ngModel)]="prixMaxSelect"
+              (input)="onMaxChange($event)"
+              class="absolute top-0 left-0 w-full h-2 bg-transparent cursor-pointer slider-input"
+            />
+            <!-- Affichage des prix en mode texte éditable -->
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center space-x-1">
+                <input
+                  type="text"
+                  [(ngModel)]="prixMinSelect"
+                  (blur)="validateMinPrice()"
+                  (keypress)="allowOnlyNumbers($event)"
+                  class="bg-transparent border-none focus:outline-none text-blue-600 font-semibold text-lg w-12 text-right"
+                />
+                <span class="text-blue-600 font-semibold text-lg">€</span>
+              </div>
+
+              <div class="flex items-center space-x-1">
+                <input
+                  type="text"
+                  [(ngModel)]="prixMaxSelect"
+                  (blur)="validateMaxPrice()"
+                  (keypress)="allowOnlyNumbers($event)"
+                  class="bg-transparent border-none focus:outline-none text-blue-600 font-semibold text-lg w-12 text-right"
+                />
+                <span class="text-blue-600 font-semibold text-lg">€</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille des produits -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 m-4"
+    >
+      <div
+        *ngFor="let produit of produitsFiltres"
+        class="bg-white shadow-md hover:shadow-xl p-6 flex flex-col items-center rounded-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
+      >
+        <h3 class="text-lg font-bold mb-3 text-gray-800 text-center">
+          {{ produit.nom }}
+        </h3>
+        <div
+          class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center"
+        >
+          <img src="{{ produit.imageUrl }}" />
+        </div>
+        <div
+          class="flex items-center justify-center bg-blue-50 px-3 py-1 rounded-full"
+        >
+          <span class="text-lg font-bold text-blue-600"
+            >{{ produit.prix }}€</span
+          >
+        </div>
+      </div>
+
+      <div
+        *ngIf="produitsFiltres.length === 0"
+        class="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"
+      >
+        <svg
+          class="w-16 h-16 mb-4 text-gray-300"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        <p class="text-xl font-medium">Aucun produit trouvé</p>
+        <p class="text-sm mt-1">
+          Essayez de modifier vos critères de recherche
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

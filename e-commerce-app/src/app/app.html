@@ -1,0 +1,14 @@
+<header class="flex justify-between space-between bg-gray-100">
+  <a href="/">
+    <img src="logo/logo_name.jpg" alt="logo" class="max-h-28 mx-10" />
+  </a>
+
+  <nav class="flex items-center space-x-4 text-xl p-6">
+    <a routerLink="/">Accueil</a>
+    <a routerLink="/produits">Produits</a>
+    <a routerLink="/contact">Contact</a>
+  </nav>
+</header>
+<section class="w-full p-10">
+  <router-outlet></router-outlet>
+</section>
