@@ -1,3 +1,10 @@
+.vs
+
+# Backend
+bin/
+obj/
+
+
 # Node dependencies
 node_modules/
 
@@ -26,3 +33,7 @@ yarn-debug.log*
 yarn-error.log*
 
 src/environments/environment.*.ts
+
+
+#  mdp and others
+.env

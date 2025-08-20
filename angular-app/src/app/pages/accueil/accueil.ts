@@ -11,9 +11,9 @@ export class Accueil {
   currentSlide = 0;
 
   produits = [
-    { nom: 'T-shirt', prix: 9.99, image: '/logo/logo_name.jpg' },
-    { nom: 'Jean', prix: 50, image: '/logo/logo_name.jpg' },
-    { nom: 'Basket', prix: 100, image: '/logo/logo_name.jpg' },
+    { name: 'T-shirt', price: 9.99, image: '/logo/logo_name.jpg' },
+    { name: 'Jean', price: 50, image: '/logo/logo_name.jpg' },
+    { name: 'Basket', price: 100, image: '/logo/logo_name.jpg' },
   ];
 
  nextSlide() {

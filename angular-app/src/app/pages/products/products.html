@@ -12,18 +12,18 @@
       class="relative flex items-center justify-center p-4 bg-white border-b border-gray-200"
     >
       <h3 class="text-lg font-semibold text-gray-700 flex items-center">
-        Filtres
+        Filters
       </h3>
       <button
-        (click)="toggleFiltres()"
+        (click)="toggleFilters()"
         class="absolute right-4 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
         [attr.aria-label]="
-          filtresVisibles ? 'Masquer les filtres' : 'Afficher les filtres'
+          visibleFilters ? 'Masquer les filtres' : 'Afficher les filtres'
         "
       >
         <svg
           class="w-4 h-4 transition-transform duration-200"
-          [class.rotate-180]="!filtresVisibles"
+          [class.rotate-180]="!visibleFilters"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -39,18 +39,19 @@
     <!-- Contenu des filtres avec animation -->
     <div
       class="transition-all duration-300 ease-in-out"
-      [class.max-h-0]="!filtresVisibles"
-      [class.max-h-96]="filtresVisibles"
-      [class.opacity-0]="!filtresVisibles"
-      [class.opacity-100]="filtresVisibles"
+      [class.max-h-0]="!visibleFilters"
+      [class.max-h-96]="visibleFilters"
+      [class.opacity-0]="!visibleFilters"
+      [class.opacity-100]="visibleFilters"
       style="overflow: hidden"
     >
       <div class="p-6">
         <!-- Barre de recherche -->
         <div class="mb-8">
           <input
-            [(ngModel)]="recherche"
-            placeholder="Rechercher un produit..."
+            [(ngModel)]="search"
+            (input)="onFilterChange()"
+            placeholder="Rechercher un product..."
             class="w-full max-w-md mx-auto p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center transition-all duration-200"
           />
         </div>
@@ -58,7 +59,8 @@
         <!-- Filtres par type -->
         <div class="relative mb-8">
           <select
-            [(ngModel)]="typeSelectionne"
+            [(ngModel)]="selectedType"
+            (input)="onFilterChange()"
             name="type"
             id="type"
             class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer min-w-40 text-center"
@@ -70,7 +72,7 @@
           </select>
         </div>
 
-        <!-- Section filtre prix -->
+        <!-- Section filtre price -->
         <div class="w-full max-w-lg mx-auto">
           <!-- Double Range Slider -->
           <div class="relative mb-8">
@@ -89,7 +91,7 @@
               type="range"
               [min]="minPrice"
               [max]="maxPrice"
-              [(ngModel)]="prixMinSelect"
+              [(ngModel)]="minPriceSelect"
               (input)="onMinChange($event)"
               class="absolute top-0 left-0 w-full h-2 bg-transparent cursor-pointer slider-input"
             />
@@ -98,16 +100,16 @@
               type="range"
               [min]="minPrice"
               [max]="maxPrice"
-              [(ngModel)]="prixMaxSelect"
+              [(ngModel)]="maxPriceSelect"
               (input)="onMaxChange($event)"
               class="absolute top-0 left-0 w-full h-2 bg-transparent cursor-pointer slider-input"
             />
-            <!-- Affichage des prix en mode texte éditable -->
+            <!-- Affichage des price en mode texte éditable -->
             <div class="flex justify-between items-center mb-6">
               <div class="flex items-center space-x-1">
                 <input
                   type="text"
-                  [(ngModel)]="prixMinSelect"
+                  [(ngModel)]="minPriceSelect"
                   (blur)="validateMinPrice()"
                   (keypress)="allowOnlyNumbers($event)"
                   class="bg-transparent border-none focus:outline-none text-blue-600 font-semibold text-lg w-12 text-right"
@@ -118,7 +120,7 @@
               <div class="flex items-center space-x-1">
                 <input
                   type="text"
-                  [(ngModel)]="prixMaxSelect"
+                  [(ngModel)]="maxPriceSelect"
                   (blur)="validateMaxPrice()"
                   (keypress)="allowOnlyNumbers($event)"
                   class="bg-transparent border-none focus:outline-none text-blue-600 font-semibold text-lg w-12 text-right"
@@ -131,33 +133,33 @@
       </div>
     </div>
 
-    <!-- Grille des produits -->
+    <!-- Grille des products -->
     <div
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 m-4"
     >
       <div
-        *ngFor="let produit of produitsFiltres"
+        *ngFor="let product of products"
         class="bg-white shadow-md hover:shadow-xl p-6 flex flex-col items-center rounded-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
       >
         <h3 class="text-lg font-bold mb-3 text-gray-800 text-center">
-          {{ produit.nom }}
+          {{ product.name }}
         </h3>
         <div
           class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center"
         >
-          <img src="{{ produit.imageUrl }}" />
+          <img src="{{ product.imageUrl }}" />
         </div>
         <div
           class="flex items-center justify-center bg-blue-50 px-3 py-1 rounded-full"
         >
           <span class="text-lg font-bold text-blue-600"
-            >{{ produit.prix }}€</span
+            >{{ product.price }}€</span
           >
         </div>
       </div>
 
       <div
-        *ngIf="produitsFiltres.length === 0"
+        *ngIf="products.length === 0"
         class="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"
       >
         <svg
@@ -171,7 +173,7 @@
             clip-rule="evenodd"
           ></path>
         </svg>
-        <p class="text-xl font-medium">Aucun produit trouvé</p>
+        <p class="text-xl font-medium">Aucun product trouvé</p>
         <p class="text-sm mt-1">
           Essayez de modifier vos critères de recherche
         </p>
