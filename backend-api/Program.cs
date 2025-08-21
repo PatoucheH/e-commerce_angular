@@ -7,7 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using backend_api.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
-
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileProviders;
+using Stripe;
 
 
 namespace backend_api;
@@ -75,11 +77,53 @@ public class Program
             };
         });
 
+
+        // Swagger 
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "backend_api", Version = "v1" });
+
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter 'Bearer' followed by your token ",
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[]{}
+                }
+            });
+        });
+
+        // stripe
+        StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+
+
         //Services
         builder.Services.AddScoped<RoleSeederService>();
+        builder.Services.AddScoped<ICartService, CartService>();
+        builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
+        // Static File
+        builder.Services.Configure<FileUploadSettings>(
+            builder.Configuration.GetSection("FileUpload"));
 
         // CORS Angular
         var allowedOrigins = builder.Environment.IsDevelopment()
@@ -118,6 +162,15 @@ public class Program
             var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeederService>();
             await roleSeeder.SeedRolesAndAdminAsync();
         }
+
+
+        //Configuration for static's files
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(
+               Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images")),
+            RequestPath = "/Images",
+        });
 
 
         app.Run();

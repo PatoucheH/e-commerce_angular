@@ -1,0 +1,122 @@
+﻿using backend_api.Models;
+using backend_api.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+
+namespace backend_api.Services
+{
+    public interface IOrderService
+    {
+        public Task<OrderDto> CreateOrderFromCart(string userId, string shippingAddress);
+        public Task<IEnumerable<OrderDto>> GetUserOrders(string userId);
+        public Task<OrderDto> GetOrderById(int orderId);
+        public Task UpdateOrderByStatus(int orderId, OrderStatus newStatus);
+    }
+
+    public class OrderService : IOrderService
+    {
+        private readonly AppDbContext _context;
+
+        public OrderService(AppDbContext context)
+        {
+            _context = context;
+        }
+        public async Task<OrderDto> CreateOrderFromCart(string userId, string shippingAddress)
+        {
+            var cart = await _context.Carts.Include(c => c.ItemList).FirstOrDefaultAsync(c => c.UserId == userId);
+            if (cart is null)
+                throw new Exception("The cart doesn't exists");
+
+            if (!cart.ItemList.Any())
+                throw new Exception("Cart is empty");
+
+            var order = new Order { UserId = userId, ShippingAddress = shippingAddress };
+
+            foreach(var item in cart.ItemList)
+            {
+                order.Items.Add(new OrderItems
+                {
+                    OrderId = order.Id,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                });
+            }
+
+            order.Total = cart.ItemList.Sum(item => item.Quantity * item.UnitPrice);
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            _context.CartItems.RemoveRange(cart.ItemList);
+            cart.ItemList.Clear();
+            await _context.SaveChangesAsync();
+
+            return new OrderDto { 
+                Id = order.Id,
+                UserId = order.UserId,
+                Status = order.Status,
+                Total = order.Total,
+                ShippingAddress = shippingAddress 
+            };
+        }
+
+        public async Task<IEnumerable<OrderDto>> GetUserOrders(string userId)
+        {
+            var orders = await _context.Orders.Where(o => o.UserId == userId).Include(o => o.Items).ToListAsync();
+
+            var ordersDtos = orders.Select(order => new OrderDto
+                {
+                    Id = order.Id,
+                    UserId = order.UserId,
+                    Total = order.Total,
+                    Status = order.Status,
+                    ShippingAddress = order.ShippingAddress,
+                    Items = order.Items.Select(item => new OrderItemDto
+                    {
+                        Id = item.Id,
+                        ProductId = item.ProductId,
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                    }).ToList()
+                }).ToList();
+            return ordersDtos;
+        }
+
+        public async Task<OrderDto> GetOrderById(int orderId)
+        {
+            var order = await _context.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == orderId);
+            if (order is null)
+                throw new Exception("Order doesn't exists");
+
+            return new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                Total = order.Total,
+                Status = order.Status,
+                ShippingAddress = order.ShippingAddress,
+                Items = order.Items.Select(item => new OrderItemDto
+                {
+                    Id = item.Id,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+
+                }).ToList(),
+            };
+        }
+        public async Task UpdateOrderByStatus(int orderId, OrderStatus newStatus)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order is null)
+                throw new Exception("Order not found");
+            order.Status = newStatus;
+            await _context.SaveChangesAsync();
+            Console.WriteLine($"Status successfully changed in {newStatus}");
+        }
+    }
+}

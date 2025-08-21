@@ -21,17 +21,23 @@ public class AdminController : ControllerBase
     [HttpGet("users")]
     public async Task<ActionResult> GetAllUsers()
     {
-        var users = await _userManager.Users.Select(u => new
-        {
-            u.Id,
-            u.Email,
-            u.FirstName,
-            u.LastName,
-            u.CreatedAt,
-            Roles = _userManager.GetRolesAsync(u).Result
-        }).ToListAsync();
+        var users = await _userManager.Users.ToListAsync();
 
-        return Ok(users);
+        var result = new List<object>();
+        foreach( var u in users)
+        {
+            var roles = await _userManager.GetRolesAsync(u);
+            result.Add(new
+            {
+                u.Id,
+                u.Email,
+                u.FirstName,
+                u.LastName,
+                u.CreatedAt,
+                Roles = roles
+            });
+        }
+        return Ok(result);
     }
 
     [HttpPost("users/{userId}/promote-to-seller")]
@@ -39,7 +45,7 @@ public class AdminController : ControllerBase
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
-            return NotFound("User not find");
+            return NotFound("User not found");
 
         var currentRoles = await _userManager.GetRolesAsync(user);
         if (currentRoles.Contains("Customer"))
@@ -51,7 +57,7 @@ public class AdminController : ControllerBase
         return Ok(new { message = $"{user.Email} is now a seller" });
     }
 
-    [HttpPost("users/{userId}/demote-to-cutomer")]
+    [HttpPost("users/{userId}/demote-to-customer")]
     public async Task<ActionResult> DemoteToCustomer(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
@@ -77,7 +83,7 @@ public class AdminController : ControllerBase
             return NotFound("User not found");
 
         var admins = await _userManager.GetUsersInRoleAsync("Admin");
-        if (admins.Count == 1 && admins.Contains(user))
+        if (admins.Count == 1 && admins.Any(a => a.Id == user.Id))
             return BadRequest("Impossible to delete the last admin");
 
         var result = await _userManager.DeleteAsync(user);

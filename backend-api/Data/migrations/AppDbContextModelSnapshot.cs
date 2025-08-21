@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace backend_api.Data.migrations
+namespace backend_api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -238,8 +238,11 @@ namespace backend_api.Data.migrations
 
             modelBuilder.Entity("backend_api.Models.Cart", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -250,18 +253,19 @@ namespace backend_api.Data.migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("backend_api.Models.CartItems", b =>
+            modelBuilder.Entity("backend_api.Models.CartItem", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
 
-                    b.Property<string>("CartId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("CartId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
@@ -272,6 +276,8 @@ namespace backend_api.Data.migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("CartItems");
                 });
@@ -291,9 +297,8 @@ namespace backend_api.Data.migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("numeric");
@@ -323,10 +328,13 @@ namespace backend_api.Data.migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ProductName")
+                        .HasColumnType("text");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("UnitaryPrice")
+                    b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
@@ -450,13 +458,23 @@ namespace backend_api.Data.migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("backend_api.Models.CartItems", b =>
+            modelBuilder.Entity("backend_api.Models.CartItem", b =>
                 {
-                    b.HasOne("backend_api.Models.Cart", null)
-                        .WithMany("Carts")
+                    b.HasOne("backend_api.Models.Cart", "Cart")
+                        .WithMany("ItemList")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("backend_api.Models.Product", "product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("product");
                 });
 
             modelBuilder.Entity("backend_api.Models.Order", b =>
@@ -494,7 +512,7 @@ namespace backend_api.Data.migrations
 
             modelBuilder.Entity("backend_api.Models.Cart", b =>
                 {
-                    b.Navigation("Carts");
+                    b.Navigation("ItemList");
                 });
 
             modelBuilder.Entity("backend_api.Models.Order", b =>
