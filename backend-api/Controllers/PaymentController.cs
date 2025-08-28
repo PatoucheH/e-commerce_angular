@@ -1,4 +1,4 @@
-﻿using backend_api.Models.DTOs;
+﻿using backend_api.Models.DTOs.Order;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;

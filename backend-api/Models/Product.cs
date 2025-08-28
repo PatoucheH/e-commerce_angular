@@ -1,4 +1,5 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
 namespace backend_api.Models;
 
 public class Product
@@ -10,4 +11,10 @@ public class Product
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public int Stock { get; set; }
+
+    public virtual ICollection<ProductsRatings> Ratings { get; set; } = new List<ProductsRatings>();
+    [NotMapped]
+    public double AverageRatings => Ratings.Any() ? Ratings.Average(r => r.Rating) : 0;
+    [NotMapped]
+    public int TotalRatings => Ratings.Count;
 }

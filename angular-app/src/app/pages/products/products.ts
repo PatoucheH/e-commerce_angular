@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductService, Product } from '../../services/product.service';
+import { ProductService } from '../../services/product.service';
+import { Product } from '../../models/product.model';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({
@@ -12,6 +13,8 @@ import { HttpClientModule } from '@angular/common/http';
   providers: [ProductService],
 })
 export class Products implements OnInit {
+  private FilterTimeout: any;
+
   search = '';
   selectedType = '';
 
@@ -48,7 +51,7 @@ export class Products implements OnInit {
       type: this.selectedType || undefined,
     };
 
-    this.productService.getproducts(Filters).subscribe({
+    this.productService.getProducts(Filters).subscribe({
       next: (products) => {
         this.products = products;
         this.loading = false;
@@ -58,34 +61,7 @@ export class Products implements OnInit {
         console.error('Erreur API:', error);
         this.error = 'Error when loading products';
         this.loading = false;
-
-        // Fallback avec données mockées pour le développement
-        this.products = [
-          {
-            id: 1,
-            name: 'T-shirt',
-            price: 9.99,
-            type: 'T-shirt',
-            imageUrl: '/logo/logo_name.jpg',
-            stock: 10,
-          },
-          {
-            id: 2,
-            name: 'Jean',
-            price: 50,
-            type: 'Pantalon',
-            imageUrl: '/logo/logo_name.jpg',
-            stock: 15,
-          },
-          {
-            id: 3,
-            name: 'Basket',
-            price: 80,
-            type: 'Chaussures',
-            imageUrl: '/logo/logo_name.jpg',
-            stock: 8,
-          },
-        ];
+        this.products = [];
       },
     });
   }
@@ -165,8 +141,6 @@ export class Products implements OnInit {
     }, 300);
   }
 
-  private FilterTimeout: any;
-
   // Permettre seulement les chiffres dans les inputs
   allowOnlyNumbers(event: KeyboardEvent): void {
     const charCode = event.which ? event.which : event.keyCode;
@@ -182,5 +156,54 @@ export class Products implements OnInit {
     if (charCode < 48 || charCode > 57) {
       event.preventDefault();
     }
+  }
+
+  // Pour optimiser le rendu de la liste
+  trackByProductId(index: number, product: Product): number {
+    return product.id;
+  }
+
+  // Gestion des erreurs d'images
+  onImageError(event: any): void {
+    event.target.src = '/assets/images/no-image.jpg';
+  }
+
+  // Génère un tableau d'étoiles pour l'affichage des notes
+  getStarsArray(rating: number): string[] {
+    const stars: string[] = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    // Étoiles pleines
+    for (let i = 0; i < fullStars; i++) {
+      stars.push('full');
+    }
+
+    // Étoile à moitié
+    if (hasHalfStar) {
+      stars.push('half');
+    }
+
+    while (stars.length < 5) {
+      stars.push('empty');
+    }
+
+    return stars;
+  }
+
+  // Action d'ajout au panier
+  addToCart(product: Product): void {
+    if (product.stock > 0) {
+      console.log('Produit ajouté au panier:', product);
+    }
+  }
+
+  // Effacer tous les filtres
+  clearFilters(): void {
+    this.search = '';
+    this.selectedType = '';
+    this.minPriceSelect = this.minPrice;
+    this.maxPriceSelect = this.maxPrice;
+    this.chargerproducts();
   }
 }

@@ -137,8 +137,9 @@
     <div
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 m-4"
     >
+      @for (product of products; track product.id){
+
       <div
-        *ngFor="let product of products"
         class="bg-white shadow-md hover:shadow-xl p-6 flex flex-col items-center rounded-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
       >
         <h3 class="text-lg font-bold mb-3 text-gray-800 text-center">
@@ -149,6 +150,19 @@
         >
           <img src="{{ product.imageUrl }}" />
         </div>
+        <div class="mb-3 text-center">
+          <!-- Note avec étoile simple -->
+          <div class="flex items-center justify-center text-yellow-400 mb-1">
+            <span class="text-lg mr-1">★</span>
+            <span class="text-gray-700 font-medium">{{
+              product.averageRating
+            }}</span>
+          </div>
+          <!-- Nombre d'avis -->
+          <div class="text-xs text-gray-500">
+            {{ product.totalRatings }} avis
+          </div>
+        </div>
         <div
           class="flex items-center justify-center bg-blue-50 px-3 py-1 rounded-full"
         >
@@ -157,9 +171,8 @@
           >
         </div>
       </div>
-
+      } @empty{
       <div
-        *ngIf="products.length === 0"
         class="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"
       >
         <svg
@@ -178,6 +191,7 @@
           Essayez de modifier vos critères de recherche
         </p>
       </div>
+      }
     </div>
   </div>
 </div>

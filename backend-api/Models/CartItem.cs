@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace backend_api.Models
+﻿namespace backend_api.Models
 {
     public class CartItem
     {

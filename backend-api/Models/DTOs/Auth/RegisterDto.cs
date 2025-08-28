@@ -1,5 +1,4 @@
-
-namespace backend_api.Models.DTOs;
+namespace backend_api.Models.DTOs.Auth;
  public class RegisterDto
 {
     public string Email { get; set; } = string.Empty;

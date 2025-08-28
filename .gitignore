@@ -35,5 +35,5 @@ yarn-error.log*
 src/environments/environment.*.ts
 
 
-#  mdp and others
+# mdp and others
 .env

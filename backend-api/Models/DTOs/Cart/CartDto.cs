@@ -1,4 +1,4 @@
-﻿namespace backend_api.Models.DTOs;
+﻿namespace backend_api.Models.DTOs.Cart;
 public class CartDto
 {
     public int Id { get; set; }

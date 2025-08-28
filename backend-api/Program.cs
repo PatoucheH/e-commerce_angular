@@ -115,8 +115,10 @@ public class Program
         //Services
         builder.Services.AddScoped<RoleSeederService>();
         builder.Services.AddScoped<ICartService, CartService>();
+        builder.Services.AddScoped<IProductsService, ProductsService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
         builder.Services.AddScoped<IImageService, ImageService>();
+        builder.Services.AddScoped<IRatingService, RatingService>();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();

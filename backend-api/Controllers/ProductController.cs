@@ -1,78 +1,56 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using backend_api.Services;
 using backend_api.Models;
 
 namespace backend_api;
 
 [ApiController]
 [Microsoft.AspNetCore.Mvc.Route("api/[controller]")]
-public class ProductController : ControllerBase
+public class ProductsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IProductsService _productsService;
 
-    public ProductController(AppDbContext context)
+    public ProductsController(IProductsService productsService)
     {
-        _context = context;
+        _productsService = productsService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
-        [FromQuery] string? search,
-        [FromQuery] decimal? minPrice,
-        [FromQuery] decimal? maxPrice,
-        [FromQuery] string? type)
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] string? search, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? type)
     {
-        var query = _context.Products.AsQueryable();
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(p => p.Name.ToLower().Contains(search.ToLower()));
-
-        if (minPrice.HasValue)
-            query = query.Where(p => p.Price >= minPrice.Value);
-
-        if (maxPrice.HasValue)
-            query = query.Where(p => p.Price <= maxPrice.Value);
-
-        if (!string.IsNullOrWhiteSpace(type))
-            query = query.Where(p => p.Type == type);
-
-        return await query.ToListAsync();
+        var products =  await _productsService.GetProducts(search, minPrice, maxPrice, type);
+        return Ok(products);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Product>> GetProduct(int id)
     {
-        var produit = await _context.Products.FindAsync(id);
-        return produit == null ? NotFound() : produit;
+        var product = await _productsService.GetProductById(id);
+        return Ok(product);
     }
 
 
     [HttpPost]
     public async Task<ActionResult> PostProduct(Product product)
     {
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetProducts), new { id = product.Id, product });
+        await _productsService.AddProduct(product);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateProduct(int id, Product product)
     {
-        if (id != product.Id) return BadRequest();
-
-        _context.Entry(product).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
-        return NoContent();
+        await _productsService.UpdateProduct(id, product);
+        return Ok();
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteProduct(int id)
     {
-        var product = await _context.Products.FindAsync(id);
-        if (product == null) return NotFound();
-        _context.Products.Remove(product);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        await _productsService.DeleteProduct(id);
+        return Ok();
     }
+
 }

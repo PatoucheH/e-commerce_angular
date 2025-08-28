@@ -1,5 +1,5 @@
 ﻿using System;
-using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.Cart;
 using backend_api.Services;
 using Microsoft.AspNetCore.Mvc;
 

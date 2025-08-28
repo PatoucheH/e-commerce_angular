@@ -1,12 +1,12 @@
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization; // AJOUT IMPORTANT
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using backend_api.Models;
-using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.Auth;
 
 namespace backend_api.Controllers;
 
@@ -76,6 +76,65 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Deconnected " });
     }
 
+    [HttpPut("profile")]
+    [Authorize] // Attribut d'autorisation
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Token invalide" });
+            
+        var user = await _userManager.FindByIdAsync(userId);
+        
+        if (user == null)
+            return NotFound(new { message = "Utilisateur non trouvé" });
+
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        user.Email = request.Email;
+        user.UserName = request.Email;
+
+        var result = await _userManager.UpdateAsync(user);
+        
+        if (result.Succeeded)
+        {
+            return Ok(new 
+            {
+                id = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName
+            });
+        }
+
+        return BadRequest(new { message = "Erreur lors de la mise à jour" });
+    }
+
+    [HttpPut("change-password")]
+    [Authorize] // Attribut d'autorisation
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Token invalide" });
+            
+        var user = await _userManager.FindByIdAsync(userId);
+        
+        if (user == null)
+            return NotFound(new { message = "Utilisateur non trouvé" });
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        
+        if (result.Succeeded)
+        {
+            return Ok(new { message = "Mot de passe modifié avec succès" });
+        }
+
+        return BadRequest(new { message = "Mot de passe actuel incorrect" });
+    }
+
     private async Task<string> GenerateJwtToken(ApplicationUser user)
     {
         var claims = new List<Claim>
@@ -102,7 +161,5 @@ public class AuthController : ControllerBase
             signingCredentials: creds
         );
         return new JwtSecurityTokenHandler().WriteToken(token);
-
     }
-
 }

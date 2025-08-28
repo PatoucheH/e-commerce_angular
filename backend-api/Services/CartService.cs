@@ -1,5 +1,6 @@
 ﻿using backend_api.Models;
 using backend_api.Models.DTOs;
+using backend_api.Models.DTOs.Cart;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_api.Services

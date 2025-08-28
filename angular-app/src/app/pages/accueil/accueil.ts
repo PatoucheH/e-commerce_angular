@@ -11,21 +11,36 @@ export class Accueil {
   currentSlide = 0;
 
   produits = [
-    { name: 'T-shirt', price: 9.99, image: '/logo/logo_name.jpg' },
-    { name: 'Jean', price: 50, image: '/logo/logo_name.jpg' },
-    { name: 'Basket', price: 100, image: '/logo/logo_name.jpg' },
+    {
+      name: 'T-shirt',
+      price: 9.99,
+      image:
+        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
+    },
+    {
+      name: 'Jean',
+      price: 50,
+      image:
+        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
+    },
+    {
+      name: 'Basket',
+      price: 100,
+      image:
+        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
+    },
   ];
 
- nextSlide() {
-  this.currentSlide = (this.currentSlide + 1) % this.produits.length;
-}
+  nextSlide() {
+    this.currentSlide = (this.currentSlide + 1) % this.produits.length;
+  }
 
-prevSlide() {
-  this.currentSlide =
-    this.currentSlide === 0
-      ? this.produits.length - 1
-      : this.currentSlide - 1;
-}
+  prevSlide() {
+    this.currentSlide =
+      this.currentSlide === 0
+        ? this.produits.length - 1
+        : this.currentSlide - 1;
+  }
 
   getPrevIndex(): number {
     return this.currentSlide === 0

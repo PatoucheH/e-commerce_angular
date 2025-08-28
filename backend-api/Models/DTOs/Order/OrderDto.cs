@@ -1,4 +1,4 @@
-﻿namespace backend_api.Models.DTOs
+﻿namespace backend_api.Models.DTOs.Order
 {
     public class OrderDto
     {
