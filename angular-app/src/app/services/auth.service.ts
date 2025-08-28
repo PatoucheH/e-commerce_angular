@@ -42,7 +42,7 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5147/api/Auth'; // Exactement comme votre backend
+  private apiUrl = 'http://localhost:5147/api/Auth'; 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 

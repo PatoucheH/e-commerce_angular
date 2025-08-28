@@ -1,0 +1,113 @@
+<div class="bg-white shadow rounded-lg">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-900">
+      Informations personnelles
+    </h2>
+  </div>
+
+  <div class="p-6">
+    <!-- Messages -->
+    <div
+      *ngIf="profileError"
+      class="mb-4 p-4 bg-red-50 border border-red-300 rounded-md"
+    >
+      <p class="text-sm text-red-700">{{ profileError }}</p>
+    </div>
+
+    <div
+      *ngIf="profileSuccess"
+      class="mb-4 p-4 bg-green-50 border border-green-300 rounded-md"
+    >
+      <p class="text-sm text-green-700">{{ profileSuccess }}</p>
+    </div>
+
+    <form (ngSubmit)="onProfileUpdate()" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            for="profileFirstName"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Prénom
+          </label>
+          <input
+            id="profileFirstName"
+            name="profileFirstName"
+            type="text"
+            [(ngModel)]="profileData.firstName"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label
+            for="profileLastName"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Nom
+          </label>
+          <input
+            id="profileLastName"
+            name="profileLastName"
+            type="text"
+            [(ngModel)]="profileData.lastName"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          for="profileEmail"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Adresse email
+        </label>
+        <input
+          id="profileEmail"
+          name="profileEmail"
+          type="email"
+          [(ngModel)]="profileData.email"
+          required
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          [disabled]="updateLoading"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+          [class.bg-blue-600]="!updateLoading"
+          [class.hover:bg-blue-700]="!updateLoading"
+          [class.bg-gray-400]="updateLoading"
+          [class.cursor-not-allowed]="updateLoading"
+        >
+          <svg
+            *ngIf="updateLoading"
+            class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ updateLoading ? "Mise à jour..." : "Mettre à jour" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+
+    <div class="py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <!-- En-tête du profil -->
+        <div class="bg-white shadow rounded-lg mb-8">
+          <div class="px-6 py-8">
+            <div class="flex justify-between items-center">
+              <div>
+                <h1 class="text-3xl font-bold text-gray-900">Mon Compte</h1>
+                <p class="mt-2 text-gray-600">
+                  Bienvenue, {{ user?.firstName }} {{ user?.lastName }}
+                </p>
+              </div>
+              <button
+                (click)="onLogout()"
+                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-200"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          </div>
+
+          <!-- Section Commandes -->
+          <app-orders-list></app-orders-list>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <!-- Section Informations personnelles -->
+          <app-user-info [user]="user"></app-user-info>
+
+          <!-- Section Changement de mot de passe -->
+          <app-password-change></app-password-change>
+        </div>
+      </div>
+    </div>

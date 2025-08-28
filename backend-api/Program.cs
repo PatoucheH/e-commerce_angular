@@ -19,7 +19,7 @@ public class Program
     public static async Task Main(string[] args)
     {
 
-        Env.Load();
+        Env.Load(Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.FullName, ".env"));
         var builder = WebApplication.CreateBuilder(args);
 
         //Postgre copnnection
@@ -55,27 +55,68 @@ public class Program
         //JWT
 
         var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "Your-super-secret_key_very_long123 ";
-        var issuer = builder.Environment.IsDevelopment() ? "http://localhost:5147" : builder.Configuration["JwtSettings:Issuer"];
-        var audience = builder.Environment.IsDevelopment() ? "https://localhost:4200" : builder.Configuration["JwtSettings:Audience"];
 
-        builder.Services.AddAuthentication(options =>
+// Configuration avec support multi-audience pour dev et config simple pour prod
+var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
+    ?? (builder.Environment.IsDevelopment() ? "http://localhost:5147" : builder.Configuration["JwtSettings:Issuer"]);
+
+// En développement : accepter plusieurs audiences (Swagger + Angular)
+// En production : utiliser la configuration
+var validAudiences = new List<string>();
+
+if (builder.Environment.IsDevelopment())
+{
+    // Développement : Swagger ET Angular
+    validAudiences.Add("http://localhost:5147"); // Swagger
+    validAudiences.Add("http://localhost:4200"); // Angular
+    
+    // Si variables d'environnement définies (Docker dev)
+    var envAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+    if (!string.IsNullOrEmpty(envAudience))
+    {
+        validAudiences.Add(envAudience);
+    }
+}
+else
+{
+    // Production : utiliser config ou variable d'environnement
+    var prodAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
+        ?? builder.Configuration["JwtSettings:Audience"];
+    
+    if (!string.IsNullOrEmpty(prodAudience))
+    {
+        validAudiences.Add(prodAudience);
+    }
+}
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    // Pour debug
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = issuer,
-                ValidAudience = audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
-            };
-        });
+            Console.WriteLine($"JWT Auth failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        }
+    };
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudiences = validAudiences, // Support multi-audience
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+});
 
 
         // Swagger 
@@ -128,10 +169,7 @@ public class Program
             builder.Configuration.GetSection("FileUpload"));
 
         // CORS Angular
-        var allowedOrigins = builder.Environment.IsDevelopment()
-            ? new[] { "http://localhost:4200", "https://localhost:4200" }
-            : builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "https://yourdomain.com" };
-
+        var allowedOrigins = new[] { "http://localhost:4200", "https://localhost:4200" };
 
         builder.Services.AddCors(options =>
         {
@@ -143,14 +181,16 @@ public class Program
             });
         });
 
+        // builder.WebHost.ConfigureKestrel(options =>
+        // {
+        //     options.ListenAnyIP(5000);
+        // });
+
         var app = builder.Build();
 
         //Pipeline
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.UseCors("AngularApp");
         app.UseAuthentication();
@@ -161,6 +201,8 @@ public class Program
         // Initialisation Roles
         using (var scope = app.Services.CreateScope())
         {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
             var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeederService>();
             await roleSeeder.SeedRolesAndAdminAsync();
         }

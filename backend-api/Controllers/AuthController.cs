@@ -17,12 +17,18 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+    public AuthController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -77,16 +83,16 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("profile")]
-    [Authorize] // Attribut d'autorisation
+    [Authorize]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "Token invalide" });
-            
+
         var user = await _userManager.FindByIdAsync(userId);
-        
+
         if (user == null)
             return NotFound(new { message = "Utilisateur non trouvé" });
 
@@ -96,10 +102,10 @@ public class AuthController : ControllerBase
         user.UserName = request.Email;
 
         var result = await _userManager.UpdateAsync(user);
-        
+
         if (result.Succeeded)
         {
-            return Ok(new 
+            return Ok(new
             {
                 id = user.Id,
                 email = user.Email,
@@ -112,21 +118,21 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("change-password")]
-    [Authorize] // Attribut d'autorisation
+    [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "Token invalide" });
-            
+
         var user = await _userManager.FindByIdAsync(userId);
-        
+
         if (user == null)
             return NotFound(new { message = "Utilisateur non trouvé" });
 
         var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-        
+
         if (result.Succeeded)
         {
             return Ok(new { message = "Mot de passe modifié avec succès" });
@@ -151,15 +157,47 @@ public class AuthController : ControllerBase
             claims.Add(new Claim(ClaimTypes.Role, role));
 
         var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "Your-super-secret_key_very_long123";
+
+        // Issuer (même logique que Program.cs)
+        var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+            ?? "http://localhost:5147"; // Valeur par défaut pour dev
+
+        // Audience : détecter d'où vient la requête
+        var audience = GetAudienceForRequest();
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
         var token = new JwtSecurityToken(
-            issuer: "http://localhost:5147",
-            audience: "https://localhost:4200",
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: DateTime.Now.AddDays(30),
             signingCredentials: creds
         );
+
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private string GetAudienceForRequest()
+    {
+        // En développement : détecter l'origine ou utiliser Swagger par défaut
+        var origin = HttpContext.Request.Headers["Origin"].FirstOrDefault();
+        var referer = HttpContext.Request.Headers["Referer"].FirstOrDefault();
+
+        // Si la requête vient d'Angular (port 4200)
+        if (!string.IsNullOrEmpty(origin) && origin.Contains("4200"))
+            return "http://localhost:4200";
+
+        if (!string.IsNullOrEmpty(referer) && referer.Contains("4200"))
+            return "http://localhost:4200";
+
+        // Si JWT_AUDIENCE est définie dans le .env
+        var envAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+        if (!string.IsNullOrEmpty(envAudience))
+            return envAudience;
+
+        // Sinon, c'est probablement Swagger (port 5147)
+        return "http://localhost:5147";
     }
 }
