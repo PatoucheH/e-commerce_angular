@@ -1,0 +1,15 @@
+@if (cart) {
+  <h2>Mon panier</h2>
+  <ul>
+    @for (item of cart.itemList; track item.id) {
+      <li>
+        {{ item.product?.name ?? 'Produit inconnu' }}
+        - {{ item.quantity }} x {{ item.unitPrice }} €
+        <button (click)="removeItem(item.productId)">Supprimer</button>
+      </li>
+    }
+  </ul>
+  <h3>Total : {{ cart.totalPrice }} €</h3>
+} @else { 
+  <p>Votre panier est vide.</p>
+}

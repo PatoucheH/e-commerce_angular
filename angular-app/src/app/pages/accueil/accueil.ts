@@ -13,13 +13,13 @@ export class Accueil {
   produits = [
     {
       name: 'T-shirt',
-      price: 9.99,
+      price: 6.99,
       image:
         'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
     },
     {
       name: 'Jean',
-      price: 50,
+      price: 25,
       image:
         'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
     },

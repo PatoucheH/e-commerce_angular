@@ -37,3 +37,4 @@ src/environments/environment.*.ts
 
 # mdp and others
 .env
+.env.docker

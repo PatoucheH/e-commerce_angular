@@ -1,3 +1,4 @@
+<app-product-modal></app-product-modal>
 <div class="text-center mx-4 sm:mx-8 lg:mx-36 p-6">
   <h2 class="text-4xl font-bold m-10 text-center text-gray-800">
     Nos produits
@@ -138,39 +139,40 @@
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 m-4"
     >
       @for (product of products; track product.id){
-
-      <div
-        class="bg-white shadow-md hover:shadow-xl p-6 flex flex-col items-center rounded-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
-      >
-        <h3 class="text-lg font-bold mb-3 text-gray-800 text-center">
-          {{ product.name }}
-        </h3>
+      <a (click)="openModal(product)" class="cursor-pointer">
         <div
-          class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center"
+          class="bg-white shadow-md hover:shadow-xl p-6 flex flex-col items-center rounded-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
         >
-          <img src="{{ product.imageUrl }}" />
-        </div>
-        <div class="mb-3 text-center">
-          <!-- Note avec étoile simple -->
-          <div class="flex items-center justify-center text-yellow-400 mb-1">
-            <span class="text-lg mr-1">★</span>
-            <span class="text-gray-700 font-medium">{{
-              product.averageRating
-            }}</span>
-          </div>
-          <!-- Nombre d'avis -->
-          <div class="text-xs text-gray-500">
-            {{ product.totalRatings }} avis
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-center bg-blue-50 px-3 py-1 rounded-full"
-        >
-          <span class="text-lg font-bold text-blue-600"
-            >{{ product.price }}€</span
+          <h3 class="text-lg font-bold mb-3 text-gray-800 text-center">
+            {{ product.name }}
+          </h3>
+          <div
+            class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center"
           >
+            <img src="{{ product.imageUrl }}" />
+          </div>
+          <div class="mb-3 text-center">
+            <!-- Note avec étoile simple -->
+            <div class="flex items-center justify-center text-yellow-400 mb-1">
+              <span class="text-lg mr-1">★</span>
+              <span class="text-gray-700 font-medium">{{
+                product.averageRating
+              }}</span>
+            </div>
+            <!-- Nombre d'avis -->
+            <div class="text-xs text-gray-500">
+              {{ product.totalRatings }} avis
+            </div>
+          </div>
+          <div
+            class="flex items-center justify-center bg-blue-50 px-3 py-1 rounded-full"
+          >
+            <span class="text-lg font-bold text-blue-600"
+              >{{ product.price }}€</span
+            >
+          </div>
         </div>
-      </div>
+      </a>
       } @empty{
       <div
         class="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"

@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:16-alpine
@@ -21,23 +23,25 @@ services:
     build:
       context: ./backend-api
       dockerfile: Dockerfile
-    env_file:
-      - .env
+    container_name: e-commerce_angular-api
     environment:
-      DB_HOST: db
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      STRIP_SECRET_KEY: ${STRIP_SECRET_KEY}
-      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=5432
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=http://localhost:5147
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - STRIP_SECRET_KEY=${STRIP_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "5147:5000"
+      - "5147:5000"  
 
   web:
     build:
@@ -47,7 +51,7 @@ services:
     depends_on:
       - api
     ports:
-      - "4200:80"
+      - "4200:80"   
 
 volumes:
   db_data:

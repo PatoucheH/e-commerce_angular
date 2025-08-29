@@ -1,4 +1,3 @@
-// user-profile.component.ts
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { User } from '../../services/auth.service';

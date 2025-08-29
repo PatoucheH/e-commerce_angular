@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product.model';
-import { HttpClientModule } from '@angular/common/http';
+import { DetailProductComponent } from '../../components/detail-product/detail-product-component';
 
 @Component({
   selector: 'app-products',
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, DetailProductComponent],
   templateUrl: './products.html',
   styleUrls: ['./products.scss'],
   providers: [ProductService],
@@ -35,6 +35,14 @@ export class Products implements OnInit {
   error = '';
 
   constructor(private productService: ProductService) {}
+
+  @ViewChild(DetailProductComponent)
+  detailProductComponent?: DetailProductComponent;
+
+  openModal(product: Product) {
+    console.log('open');
+    this.detailProductComponent?.open(product);
+  }
 
   ngOnInit() {
     this.chargerproducts();
@@ -195,6 +203,8 @@ export class Products implements OnInit {
   addToCart(product: Product): void {
     if (product.stock > 0) {
       console.log('Produit ajouté au panier:', product);
+    } else {
+      alert("The product's stock is empty");
     }
   }
 

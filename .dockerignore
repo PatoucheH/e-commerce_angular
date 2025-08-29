@@ -1,0 +1,55 @@
+# Fichiers de développement local
+.env
+.env.local
+.env.development
+.env.docker
+
+# Dossiers de build et cache
+bin/
+obj/
+out/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Node modules (si vous avez du JS/TS)
+node_modules/
+npm-debug.log*
+
+# Git
+.git/
+.gitignore
+README.md
+.gitattributes
+
+# Tests
+TestResults/
+*.trx
+*.coverage
+
+# Documentation
+*.md
+docs/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+Thumbs.db
+.DS_Store
+
+# wwwroot/Images (si vous ne voulez pas les copier dans Docker)
+wwwroot/Images/
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
