@@ -23,11 +23,10 @@ export class CartService {
     productId: number,
     quantity: number
   ): Observable<Cart> {
-    return this.http.post<Cart>(`${this.apiUrl}/add-item`, {
-      userId,
-      productId,
-      quantity,
-    });
+    return this.http.post<Cart>(
+      `${this.apiUrl}/${userId}/items?productId=${productId}&quantity=${quantity}`,
+      {}
+    );
   }
 
   removeItem(userId: string, productId: number): Observable<Cart> {

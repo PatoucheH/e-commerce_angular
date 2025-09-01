@@ -14,7 +14,7 @@ namespace backend_api.Services
 
     }
 
-    public class CartService(AppDbContext context) :ICartService
+    public class CartService(AppDbContext context) : ICartService
     {
         private readonly AppDbContext _context = context;
 
@@ -38,9 +38,9 @@ namespace backend_api.Services
         public async Task<CartDto> GetOrCreateCart(string userId)
         {
             var cart = await _context.Carts.Include(c => c.ItemList).FirstOrDefaultAsync(c => c.UserId == userId);
-            if(cart is null)
+            if (cart is null)
             {
-                 cart = new Cart { UserId = userId };
+                cart = new Cart { UserId = userId };
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync();
             }
@@ -54,7 +54,7 @@ namespace backend_api.Services
                 throw new Exception("User doesn't exists");
 
             if (quantity < 1)
-                throw new Exception("Quantity muste be higher than one");
+                throw new Exception("Quantity muste be at least one");
             var cart = await _context.Carts.Include(c => c.ItemList).FirstOrDefaultAsync(c => c.UserId == userId);
             if (cart is null)
             {
@@ -106,10 +106,10 @@ namespace backend_api.Services
             var cartItem = cart.ItemList.FirstOrDefault(i => i.ProductId == productId);
             if (cartItem is null)
                 throw new Exception("Product is not in the cart");
-            
+
             cart.ItemList.Remove(cartItem);
             product.Stock += cartItem.Quantity;
-             
+
             await _context.SaveChangesAsync();
         }
 

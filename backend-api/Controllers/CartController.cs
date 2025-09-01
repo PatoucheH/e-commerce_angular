@@ -11,7 +11,7 @@ public class CartController : ControllerBase
 {
     public ICartService _cartService;
 
-    public CartController( ICartService cartService)
+    public CartController(ICartService cartService)
     {
         _cartService = cartService;
     }
@@ -25,7 +25,7 @@ public class CartController : ControllerBase
 
 
     [HttpPost("{userId}/items")]
-    public async Task<ActionResult> AddItemToCart(string userId, int productId, int quantity)
+    public async Task<ActionResult> AddItemToCart(string userId, [FromQuery] int productId, [FromQuery] int quantity)
     {
         await _cartService.AddItem(userId, productId, quantity);
         return Ok();

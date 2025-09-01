@@ -34,9 +34,26 @@ export class DetailProductComponent {
     if (this.quantity < 1 || this.quantity > this.product.stock) return;
     const user = this.authService.getCurrentUser();
     console.log(user);
-    // this.cartService.addItem(userId, this.product.id, this.quantity);
-    console.log(`Ajout au panier: ${this.product.name} x${this.quantity}`);
-    alert(`Produit ajouté au panier: ${this.product.name} x${this.quantity}`);
-    this.close();
+    console.log(this.quantity);
+    if (user) {
+      this.cartService
+        .addItem(user.id, this.product.id, this.quantity)
+        .subscribe(
+          (updatedCart) => {
+            this.cartService.updateCartState(updatedCart);
+            console.log('Panier à jour');
+            this.close();
+          },
+          (error) => {
+            console.log("Error lors de l'ajout", error);
+          }
+        );
+      console.log(`Ajout au panier: ${this.product.name} x${this.quantity}`);
+      alert(`Produit ajouté au panier: ${this.product.name} x${this.quantity}`);
+      this.close();
+    } else {
+      console.log('Utilisateur non connecté');
+      alert('Utilisateur non connecté ');
+    }
   }
 }
