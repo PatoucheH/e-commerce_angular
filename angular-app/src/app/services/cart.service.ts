@@ -20,11 +20,13 @@ export class CartService {
 
   addItem(
     userId: string,
+    productName: string,
     productId: number,
     quantity: number
   ): Observable<Cart> {
+    console.log(productName);
     return this.http.post<Cart>(
-      `${this.apiUrl}/${userId}/items?productId=${productId}&quantity=${quantity}`,
+      `${this.apiUrl}/${userId}/items?productId=${productId}&productName=${productName}&quantity=${quantity}`,
       {}
     );
   }

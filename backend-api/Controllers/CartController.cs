@@ -25,9 +25,9 @@ public class CartController : ControllerBase
 
 
     [HttpPost("{userId}/items")]
-    public async Task<ActionResult> AddItemToCart(string userId, [FromQuery] int productId, [FromQuery] int quantity)
+    public async Task<ActionResult> AddItemToCart(string userId, string productName, [FromQuery] int productId, [FromQuery] int quantity)
     {
-        await _cartService.AddItem(userId, productId, quantity);
+        await _cartService.AddItem(userId, productName, productId, quantity);
         return Ok();
     }
 

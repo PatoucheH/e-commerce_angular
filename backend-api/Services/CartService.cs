@@ -9,7 +9,7 @@ namespace backend_api.Services
     public interface ICartService
     {
         public Task<CartDto> GetOrCreateCart(string userId);
-        public Task AddItem(string userId, int productId, int quantity);
+        public Task AddItem(string userId, string productName, int productId, int quantity);
         public Task RemoveItem(string userId, int productId);
 
     }
@@ -27,6 +27,7 @@ namespace backend_api.Services
                 ItemList = cart.ItemList.Select(item => new CartItemDto
                 {
                     Id = item.Id,
+                    ProductName = item.ProductName,
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice
@@ -47,7 +48,7 @@ namespace backend_api.Services
             return MapToDto(cart);
         }
 
-        public async Task AddItem(string userId, int productId, int quantity)
+        public async Task AddItem(string userId, string productName, int productId, int quantity)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user is null)
@@ -74,10 +75,10 @@ namespace backend_api.Services
                 cartItem.Quantity += quantity;
             else
             {
-
                 cartItem = new CartItem
                 {
                     CartId = cart.Id,
+                    ProductName = productName,
                     ProductId = productId,
                     Quantity = quantity,
                     UnitPrice = product.Price,

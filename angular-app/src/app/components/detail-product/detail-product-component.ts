@@ -33,11 +33,9 @@ export class DetailProductComponent {
   addToCart() {
     if (this.quantity < 1 || this.quantity > this.product.stock) return;
     const user = this.authService.getCurrentUser();
-    console.log(user);
-    console.log(this.quantity);
     if (user) {
       this.cartService
-        .addItem(user.id, this.product.id, this.quantity)
+        .addItem(user.id, this.product.name, this.product.id, this.quantity)
         .subscribe(
           (updatedCart) => {
             this.cartService.updateCartState(updatedCart);
