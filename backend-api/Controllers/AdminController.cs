@@ -93,6 +93,4 @@ public class AdminController : ControllerBase
         return BadRequest(result.Errors);
 
     }
-
-
 }

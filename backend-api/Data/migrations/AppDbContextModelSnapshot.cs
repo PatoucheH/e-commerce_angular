@@ -371,6 +371,10 @@ namespace backend_api.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Stock")
                         .HasColumnType("integer");
 
@@ -388,8 +392,9 @@ namespace backend_api.Data.Migrations
                             ImageUrl = "logo/logo_name.jpg",
                             Name = "T-shirt",
                             Price = 19.99m,
+                            SellerId = "261b56a2-1933-4742-ac36-a1e083920dac",
                             Stock = 50,
-                            Type = "T-shirt"
+                            Type = "Clothing"
                         },
                         new
                         {
@@ -397,8 +402,9 @@ namespace backend_api.Data.Migrations
                             ImageUrl = "logo/logo_name.jpg",
                             Name = "Jean",
                             Price = 50m,
+                            SellerId = "261b56a2-1933-4742-ac36-a1e083920dac",
                             Stock = 50,
-                            Type = "Pantalon"
+                            Type = "Clothing"
                         },
                         new
                         {
@@ -406,8 +412,9 @@ namespace backend_api.Data.Migrations
                             ImageUrl = "logo/logo_name.jpg",
                             Name = "Basket",
                             Price = 79.99m,
+                            SellerId = "261b56a2-1933-4742-ac36-a1e083920dac",
                             Stock = 50,
-                            Type = "Chaussures"
+                            Type = "Clothing"
                         });
                 });
 

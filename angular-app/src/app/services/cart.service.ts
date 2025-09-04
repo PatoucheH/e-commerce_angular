@@ -14,26 +14,30 @@ export class CartService {
 
   constructor(private http: HttpClient) {}
 
-  getCart(userId: string): Observable<Cart> {
-    return this.http.get<Cart>(`${this.apiUrl}/${userId}`);
+  getCart(): Observable<Cart> {
+    return this.http.get<Cart>('http://localhost:5147/api/cart', {
+      withCredentials: true,
+    });
   }
 
   addItem(
-    userId: string,
-    productName: string,
     productId: number,
+    productName: string,
     quantity: number
   ): Observable<Cart> {
-    console.log(productName);
     return this.http.post<Cart>(
-      `${this.apiUrl}/${userId}/items?productId=${productId}&productName=${productName}&quantity=${quantity}`,
-      {}
+      `http://localhost:5147/api/cart/items?productId=${productId}&productName=${encodeURIComponent(
+        productName
+      )}&quantity=${quantity}`,
+      {},
+      { withCredentials: true }
     );
   }
 
-  removeItem(userId: string, productId: number): Observable<Cart> {
+  removeItem(productId: number): Observable<Cart> {
     return this.http.delete<Cart>(
-      `${this.apiUrl}/${userId}/items/${productId}`
+      `http://localhost:5147/api/cart/items/${productId}`,
+      { withCredentials: true }
     );
   }
 

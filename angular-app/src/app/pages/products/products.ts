@@ -20,11 +20,11 @@ export class Products implements OnInit {
 
   // Limites globales
   minPrice = 0;
-  maxPrice = 500;
+  maxPrice = 5000;
 
   // Valeurs sélectionnées
   minPriceSelect = 0;
-  maxPriceSelect = 500;
+  maxPriceSelect = 5000;
 
   // État d'affichage des Filters
   visibleFilters = true;
@@ -45,10 +45,10 @@ export class Products implements OnInit {
   }
 
   ngOnInit() {
-    this.chargerproducts();
+    this.chargerProducts();
   }
 
-  chargerproducts() {
+  chargerProducts() {
     this.loading = true;
     this.error = '';
 
@@ -61,7 +61,12 @@ export class Products implements OnInit {
 
     this.productService.getProducts(Filters).subscribe({
       next: (products) => {
-        this.products = products;
+        this.products = products.map((p) => ({
+          ...p,
+          imageUrl: p.imageUrl
+            ? `http://localhost:5147${p.imageUrl}`
+            : `logo/logo_name.jpg`,
+        }));
         this.loading = false;
         console.log('products charged:', products);
       },
@@ -145,7 +150,7 @@ export class Products implements OnInit {
     // Petite temporisation pour éviter trop d'appels API
     clearTimeout(this.FilterTimeout);
     this.FilterTimeout = setTimeout(() => {
-      this.chargerproducts();
+      this.chargerProducts();
     }, 300);
   }
 
@@ -214,6 +219,6 @@ export class Products implements OnInit {
     this.selectedType = '';
     this.minPriceSelect = this.minPrice;
     this.maxPriceSelect = this.maxPrice;
-    this.chargerproducts();
+    this.chargerProducts();
   }
 }

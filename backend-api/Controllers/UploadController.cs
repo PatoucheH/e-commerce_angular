@@ -6,16 +6,16 @@ namespace backend_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UploadController :ControllerBase 
+    public class UploadController : ControllerBase
     {
         private readonly IImageService _imageService;
-
+    
         public UploadController(IImageService imageService)
         {
             _imageService = imageService;
         }
 
-        [HttpPost("product")]
+        [HttpPost]
         public async Task<ActionResult> UploadProductImage([FromForm] FileUploadDto dto)
         {
             try
@@ -26,9 +26,9 @@ namespace backend_api.Controllers
                 return Ok(new { Url = path });
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message});
+                return BadRequest(new { error = ex.Message });
             }
         }
     }

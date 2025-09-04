@@ -20,7 +20,8 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] string? search, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? type)
     {
-        var products =  await _productsService.GetProducts(search, minPrice, maxPrice, type);
+        var products = await _productsService.GetProducts(search, minPrice, maxPrice, type);
+        Console.WriteLine(products);
         return Ok(products);
     }
 

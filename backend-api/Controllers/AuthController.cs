@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authorization; // AJOUT IMPORTANT
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using System.Text;
 using backend_api.Models;
 using backend_api.Models.DTOs.Auth;
 
@@ -16,19 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly IConfiguration _configuration;
-    private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IConfiguration configuration,
-        IWebHostEnvironment environment)
+        SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _configuration = configuration;
-        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -44,25 +35,31 @@ public class AuthController : ControllerBase
 
         var result = await _userManager.CreateAsync(user, model.Password);
 
-        if (result.Succeeded) return Ok(new { message = "User successfully created ! " });
+        if (result.Succeeded)
+            return Ok(new { success = true, message = "User successfully created!" });
 
-        return BadRequest(result.Errors);
+        return BadRequest(new { success = false, errors = result.Errors });
     }
 
     [HttpPost("login")]
     public async Task<ActionResult> Login(LoginDto model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user is null) return Unauthorized(new { message = "Email or password incorrect ! " });
+        if (user is null)
+            return Unauthorized(new { success = false, message = "Email or password incorrect!" });
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+        var result = await _signInManager.PasswordSignInAsync(
+            user,
+            model.Password,
+            isPersistent: true, // Cookie persistant (reste après fermeture navigateur)
+            lockoutOnFailure: false);
 
         if (result.Succeeded)
         {
-            var token = await GenerateJwtToken(user);
             return Ok(new
             {
-                token = token,
+                success = true,
+                message = "Login successful",
                 user = new
                 {
                     id = user.Id,
@@ -72,14 +69,46 @@ public class AuthController : ControllerBase
                 }
             });
         }
-        return Unauthorized(new { message = "Email or password incorrect ! " });
+
+        return Unauthorized(new { success = false, message = "Email or password incorrect!" });
     }
 
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
-        return Ok(new { message = "Deconnected " });
+        return Ok(new { success = true, message = "Successfully logged out" });
+    }
+
+    [HttpGet("user")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { success = false, message = "Not authenticated" });
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+            return Unauthorized(new { success = false, message = "User not found" });
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return Ok(new
+        {
+            success = true,
+            isAuthenticated = true,
+            user = new
+            {
+                id = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                roles = roles
+            }
+        });
     }
 
     [HttpPut("profile")]
@@ -89,12 +118,12 @@ public class AuthController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { message = "Token invalide" });
+            return Unauthorized(new { success = false, message = "Token invalide" });
 
         var user = await _userManager.FindByIdAsync(userId);
 
         if (user == null)
-            return NotFound(new { message = "Utilisateur non trouvé" });
+            return NotFound(new { success = false, message = "Utilisateur non trouvé" });
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
@@ -107,14 +136,18 @@ public class AuthController : ControllerBase
         {
             return Ok(new
             {
-                id = user.Id,
-                email = user.Email,
-                firstName = user.FirstName,
-                lastName = user.LastName
+                success = true,
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    firstName = user.FirstName,
+                    lastName = user.LastName
+                }
             });
         }
 
-        return BadRequest(new { message = "Erreur lors de la mise à jour" });
+        return BadRequest(new { success = false, message = "Erreur lors de la mise à jour", errors = result.Errors });
     }
 
     [HttpPut("change-password")]
@@ -124,80 +157,32 @@ public class AuthController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { message = "Token invalide" });
+            return Unauthorized(new { success = false, message = "Token invalide" });
 
         var user = await _userManager.FindByIdAsync(userId);
 
         if (user == null)
-            return NotFound(new { message = "Utilisateur non trouvé" });
+            return NotFound(new { success = false, message = "Utilisateur non trouvé" });
 
         var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
 
         if (result.Succeeded)
         {
-            return Ok(new { message = "Mot de passe modifié avec succès" });
+            return Ok(new { success = true, message = "Mot de passe modifié avec succès" });
         }
 
-        return BadRequest(new { message = "Mot de passe actuel incorrect" });
+        return BadRequest(new { success = false, message = "Mot de passe actuel incorrect", errors = result.Errors });
     }
 
-    private async Task<string> GenerateJwtToken(ApplicationUser user)
+    // Endpoint utile pour vérifier le statut d'authentification côté Angular
+    [HttpGet("check-auth")]
+    public async Task<IActionResult> CheckAuth()
     {
-        var claims = new List<Claim>
+        if (User.Identity?.IsAuthenticated == true)
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email!),
-            new Claim(ClaimTypes.Name, user.UserName!),
-            new Claim("firstName", user.FirstName),
-            new Claim("lastName", user.LastName)
-        };
+            return await GetCurrentUser();
+        }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        foreach (var role in roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "Your-super-secret_key_very_long123";
-
-        // Issuer (même logique que Program.cs)
-        var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
-            ?? "http://localhost:5147"; // Valeur par défaut pour dev
-
-        // Audience : détecter d'où vient la requête
-        var audience = GetAudienceForRequest();
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
-            claims: claims,
-            expires: DateTime.Now.AddDays(30),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private string GetAudienceForRequest()
-    {
-        // En développement : détecter l'origine ou utiliser Swagger par défaut
-        var origin = HttpContext.Request.Headers["Origin"].FirstOrDefault();
-        var referer = HttpContext.Request.Headers["Referer"].FirstOrDefault();
-
-        // Si la requête vient d'Angular (port 4200)
-        if (!string.IsNullOrEmpty(origin) && origin.Contains("4200"))
-            return "http://localhost:4200";
-
-        if (!string.IsNullOrEmpty(referer) && referer.Contains("4200"))
-            return "http://localhost:4200";
-
-        // Si JWT_AUDIENCE est définie dans le .env
-        var envAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
-        if (!string.IsNullOrEmpty(envAudience))
-            return envAudience;
-
-        // Sinon, c'est probablement Swagger (port 5147)
-        return "http://localhost:5147";
+        return Ok(new { success = true, isAuthenticated = false });
     }
 }

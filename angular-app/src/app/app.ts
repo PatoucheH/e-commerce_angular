@@ -3,10 +3,12 @@ import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { Observable } from 'rxjs';
 import { User } from './services/auth.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, ReactiveFormsModule, CommonModule],
   templateUrl: './app.html',
 })
 export class App {

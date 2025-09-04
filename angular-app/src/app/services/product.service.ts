@@ -7,7 +7,7 @@ import { Product } from '../models/product.model';
   providedIn: 'root',
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:5147/api/products';
+  private apiUrl = 'http://localhost:5147/api/Products';
 
   constructor(private http: HttpClient) {}
 
@@ -32,5 +32,32 @@ export class ProductService {
 
   getProductById(id: number): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
+  }
+
+  addProduct(product: Product): Observable<Product> {
+    return this.http.post<Product>(`${this.apiUrl}`, product);
+  }
+
+  updateProduct(id: number, product: Product): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/${id}`, product);
+  }
+
+  deleteProduct(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+  uploadProductImage(formData: FormData): Observable<any> {
+    return this.http.post('http://localhost:5147/api/Upload', formData);
+  }
+
+  rateProduct(productId: number, rating: number, comment?: string) {
+    return this.http.post(
+      `http://localhost:5147/api/Rating`,
+      {
+        productId,
+        rating,
+        comment: comment || '',
+      },
+      { withCredentials: true }
+    );
   }
 }

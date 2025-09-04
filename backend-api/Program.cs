@@ -2,15 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using backend_api.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using backend_api.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.FileProviders;
-using Stripe;
-
 
 namespace backend_api;
 
@@ -18,12 +15,21 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        // Env.Load(Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.FullName, ".env"));
+        var envPath = Path.Combine(
+            Directory.GetParent(Directory.GetCurrentDirectory())!.FullName,
+            ".env"
+        );
+        Env.Load(envPath);
+        Console.WriteLine("Chargement .env depuis : " + envPath);
+        Console.WriteLine("STRIPE_SECRET_KEY = " + Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY"));
 
-        Env.Load(Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.FullName, ".env"));
+
+
+
         var builder = WebApplication.CreateBuilder(args);
 
-        //Postgre copnnection
-
+        //Postgre connection
         var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
                                 $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
                                 $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
@@ -52,106 +58,40 @@ public class Program
         if (builder.Environment.IsDevelopment())
             builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
-        //JWT
+        // Configuration Cookie Authentication (remplace JWT)
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(options =>
+            {
+                options.Cookie.Name = "AuthCookie";
+                options.Cookie.HttpOnly = true; // Sécurité : empêche l'accès JavaScript
+                options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+                    ? CookieSecurePolicy.SameAsRequest
+                    : CookieSecurePolicy.Always; // HTTPS en prod
+                options.Cookie.SameSite = SameSiteMode.Lax; // Lax pour dev, Strict pour prod
+                options.ExpireTimeSpan = TimeSpan.FromDays(30);
+                options.SlidingExpiration = true; // Renouvelle automatiquement
 
-        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "Your-super-secret_key_very_long123 ";
+                // Gestion des erreurs d'authentification
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
 
-// Configuration avec support multi-audience pour dev et config simple pour prod
-var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
-    ?? (builder.Environment.IsDevelopment() ? "http://localhost:5147" : builder.Configuration["JwtSettings:Issuer"]);
-
-// En développement : accepter plusieurs audiences (Swagger + Angular)
-// En production : utiliser la configuration
-var validAudiences = new List<string>();
-
-if (builder.Environment.IsDevelopment())
-{
-    // Développement : Swagger ET Angular
-    validAudiences.Add("http://localhost:5147"); // Swagger
-    validAudiences.Add("http://localhost:4200"); // Angular
-    
-    // Si variables d'environnement définies (Docker dev)
-    var envAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
-    if (!string.IsNullOrEmpty(envAudience))
-    {
-        validAudiences.Add(envAudience);
-    }
-}
-else
-{
-    // Production : utiliser config ou variable d'environnement
-    var prodAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
-        ?? builder.Configuration["JwtSettings:Audience"];
-    
-    if (!string.IsNullOrEmpty(prodAudience))
-    {
-        validAudiences.Add(prodAudience);
-    }
-}
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    // Pour debug
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"JWT Auth failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        }
-    };
-
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudiences = validAudiences, // Support multi-audience
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
-    };
-});
-
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+            });
 
         // Swagger 
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "backend_api", Version = "v1" });
-
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                In = ParameterLocation.Header,
-                Description = "Please enter 'Bearer' followed by your token ",
-                Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                new string[]{}
-                }
-            });
+            // Note: Swagger avec cookies nécessite une configuration différente
+            // Pour les tests, vous devrez vous connecter via l'endpoint /api/auth/login
         });
-
-        // stripe
-        StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
-
 
         //Services
         builder.Services.AddScoped<RoleSeederService>();
@@ -162,13 +102,12 @@ builder.Services.AddAuthentication(options =>
         builder.Services.AddScoped<IRatingService, RatingService>();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
 
         // Static File
         builder.Services.Configure<FileUploadSettings>(
             builder.Configuration.GetSection("FileUpload"));
 
-        // CORS Angular
+        // CORS pour Angular avec support des cookies
         var allowedOrigins = new[] { "http://localhost:4200", "https://localhost:4200" };
 
         builder.Services.AddCors(options =>
@@ -177,14 +116,10 @@ builder.Services.AddAuthentication(options =>
             {
                 policy.WithOrigins(allowedOrigins)
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
+                    .AllowAnyHeader()
+                    .AllowCredentials();
             });
         });
-
-        // builder.WebHost.ConfigureKestrel(options =>
-        // {
-        //     options.ListenAnyIP(5000);
-        // });
 
         var app = builder.Build();
 
@@ -193,10 +128,9 @@ builder.Services.AddAuthentication(options =>
         app.UseSwaggerUI();
 
         app.UseCors("AngularApp");
-        app.UseAuthentication();
+        app.UseAuthentication(); // Toujours avant UseAuthorization
         app.UseAuthorization();
         app.MapControllers();
-
 
         // Initialisation Roles
         using (var scope = app.Services.CreateScope())
@@ -207,7 +141,6 @@ builder.Services.AddAuthentication(options =>
             await roleSeeder.SeedRolesAndAdminAsync();
         }
 
-
         //Configuration for static's files
         app.UseStaticFiles(new StaticFileOptions
         {
@@ -216,9 +149,6 @@ builder.Services.AddAuthentication(options =>
             RequestPath = "/Images",
         });
 
-
         app.Run();
-
     }
-
 }

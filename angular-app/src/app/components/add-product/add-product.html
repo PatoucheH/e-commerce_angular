@@ -1,0 +1,222 @@
+<!-- Overlay -->
+@if (isOpen){
+
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+>
+  <!-- Modal -->
+  <div
+    class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">
+        {{ isEditMode ? "Modifier le produit" : "Ajouter un nouveau produit" }}
+      </h2>
+      <button
+        (click)="closeModal()"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="p-6">
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Nom du produit -->
+        <div>
+          <label
+            for="name"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Nom du produit *
+          </label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Entrez le nom du produit"
+          />
+          @if( productForm.get('name')?.invalid &&
+          productForm.get('name')?.touched){
+          <div class="mt-1 text-sm text-red-600">
+            Le nom du produit est requis
+          </div>
+          }
+        </div>
+
+        <!-- Prix et Stock -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="price"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Prix (€) *
+            </label>
+            <input
+              type="number"
+              id="price"
+              formControlName="price"
+              min="0"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="0.00"
+            />
+            @if( productForm.get('price')?.invalid &&
+            productForm.get('price')?.touched){
+            <div class="mt-1 text-sm text-red-600">
+              Le prix est requis et doit être positif
+            </div>
+            }
+          </div>
+
+          <div>
+            <label
+              for="stock"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Stock *
+            </label>
+            <input
+              type="number"
+              id="stock"
+              formControlName="stock"
+              min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="0"
+            />
+            @if(productForm.get('stock')?.invalid &&
+            productForm.get('stock')?.touched){
+            <div class="mt-1 text-sm text-red-600">
+              Le stock est requis et doit être positif
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Type -->
+        <div>
+          <label
+            for="type"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Type de produit
+          </label>
+          <select
+            id="type"
+            formControlName="type"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Sélectionner un type</option>
+            <option value="Electronics">Électronique</option>
+            <option value="Clothing">Vêtements</option>
+            <option value="Books">Livres</option>
+            <option value="Home">Maison</option>
+            <option value="Sports">Sports</option>
+            <option value="Beauty">Beauté</option>
+            <option value="Food">Alimentation</option>
+            <option value="Other">Autre</option>
+          </select>
+        </div>
+        <!-- Image -->
+        <input type="file" (change)="onFileSelected($event)" class="w-full" />
+        @if(uploadError){
+
+        <div class="text-red-600 text-sm mt-1">
+          {{ uploadError }}
+        </div>
+        } @if(previewUrl){
+
+        <div class="mt-4">
+          <p class="text-sm text-gray-600 mb-2">Aperçu de l'image :</p>
+          <img
+            [src]="previewUrl"
+            alt="Aperçu"
+            class="max-w-xs max-h-48 object-cover rounded-md border"
+          />
+        </div>
+        }
+
+        <!-- Description -->
+        <div>
+          <label
+            for="description"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Description du produit..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div
+        class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200"
+      >
+        <button
+          type="button"
+          (click)="closeModal()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          [disabled]="productForm.invalid || isLoading"
+          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          @if(isLoading){
+          <span class="flex items-center">
+            <svg
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Traitement...
+          </span>
+          } @if (!isLoading){
+          <span>
+            {{ isEditMode ? "Modifier" : "Ajouter" }}
+          </span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

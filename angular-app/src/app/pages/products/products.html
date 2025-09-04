@@ -1,4 +1,4 @@
-<app-product-modal></app-product-modal>
+<app-product-modal [parent]="this"></app-product-modal>
 <div class="text-center mx-4 sm:mx-8 lg:mx-36 p-6">
   <h2 class="text-4xl font-bold m-10 text-center text-gray-800">
     Nos produits
@@ -66,10 +66,15 @@
             id="type"
             class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer min-w-40 text-center"
           >
-            <option value="">Choisir le type</option>
-            <option value="Chaussures">Chaussures</option>
-            <option value="Pantalon">Pantalon</option>
-            <option value="T-shirt">T-shirt</option>
+            <option value="">Sélectionner un type</option>
+            <option value="Electronics">Électronique</option>
+            <option value="Clothing">Vêtements</option>
+            <option value="Books">Livres</option>
+            <option value="Home">Maison</option>
+            <option value="Sports">Sports</option>
+            <option value="Beauty">Beauté</option>
+            <option value="Food">Alimentation</option>
+            <option value="Other">Autre</option>
           </select>
         </div>
 

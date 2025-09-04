@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using backend_api.Models;
 
 namespace backend_api.Services;
+
 public interface IProductsService
 {
     public Task<IEnumerable<ProductDto>> GetProducts(string? search, decimal? minPrice, decimal? maxPrice, string? type);
@@ -45,13 +46,15 @@ public class ProductsService : IProductsService
         {
             Id = p.Id,
             Name = p.Name,
+            SellerId = p.SellerId,
             Price = p.Price,
             Type = p.Type,
             Description = p.Description,
             ImageUrl = p.ImageUrl,
+            Stock = p.Stock,
             AverageRating = p.Ratings.Any() ? p.Ratings.Average(r => r.Rating) : 0,
             TotalRatings = p.Ratings.Count
-        }).ToList(); 
+        }).ToList();
     }
 
     public async Task<ProductDto> GetProductById(int id)
@@ -63,10 +66,12 @@ public class ProductsService : IProductsService
         {
             Id = id,
             Name = product.Name,
+            SellerId = product.SellerId,
             Price = product.Price,
             Type = product.Type,
             Description = product.Description,
             ImageUrl = product.ImageUrl,
+            Stock = product.Stock,
             AverageRating = product.Ratings.Any() ? product.Ratings.Average(r => r.Rating) : 0,
             TotalRatings = product.Ratings.Count
         };
@@ -94,6 +99,4 @@ public class ProductsService : IProductsService
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
     }
-
-
 }

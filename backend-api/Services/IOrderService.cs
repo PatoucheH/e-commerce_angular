@@ -34,16 +34,23 @@ namespace backend_api.Services
 
             var order = new Order { UserId = userId, ShippingAddress = shippingAddress };
 
-            foreach(var item in cart.ItemList)
+            foreach (var item in cart.ItemList)
             {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null)
+                {
+                    throw new Exception($"Le produit {item.ProductId} n'existe pas.");
+                }
+
                 order.Items.Add(new OrderItems
                 {
-                    OrderId = order.Id,
                     ProductId = item.ProductId,
+                    ProductName = product.Name,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                 });
             }
+
 
             order.Total = cart.ItemList.Sum(item => item.Quantity * item.UnitPrice);
 
@@ -54,12 +61,13 @@ namespace backend_api.Services
             cart.ItemList.Clear();
             await _context.SaveChangesAsync();
 
-            return new OrderDto { 
+            return new OrderDto
+            {
                 Id = order.Id,
                 UserId = order.UserId,
                 Status = order.Status,
                 Total = order.Total,
-                ShippingAddress = shippingAddress 
+                ShippingAddress = shippingAddress
             };
         }
 
@@ -68,21 +76,21 @@ namespace backend_api.Services
             var orders = await _context.Orders.Where(o => o.UserId == userId).Include(o => o.Items).ToListAsync();
 
             var ordersDtos = orders.Select(order => new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                Total = order.Total,
+                Status = order.Status,
+                ShippingAddress = order.ShippingAddress,
+                Items = order.Items.Select(item => new OrderItemDto
                 {
-                    Id = order.Id,
-                    UserId = order.UserId,
-                    Total = order.Total,
-                    Status = order.Status,
-                    ShippingAddress = order.ShippingAddress,
-                    Items = order.Items.Select(item => new OrderItemDto
-                    {
-                        Id = item.Id,
-                        ProductId = item.ProductId,
-                        ProductName = item.ProductName,
-                        Quantity = item.Quantity,
-                        UnitPrice = item.UnitPrice,
-                    }).ToList()
-                }).ToList();
+                    Id = item.Id,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                }).ToList()
+            }).ToList();
             return ordersDtos;
         }
 

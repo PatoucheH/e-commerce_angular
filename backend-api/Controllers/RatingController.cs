@@ -8,7 +8,7 @@ namespace backend_api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class RatingController :ControllerBase
+    public class RatingController : ControllerBase
     {
         private readonly IRatingService _ratingService;
 
@@ -22,9 +22,10 @@ namespace backend_api.Controllers
         {
             try
             {
-                var userId = User.Identity?.Name;
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (userId is null)
                     return Unauthorized("User not authenticated");
+
                 await _ratingService.AddOrUpdateRating(userId, request.ProductId, request.Rating, request.Comment);
                 return Ok(new { message = "Rating added/updated successfully !" });
             }
@@ -46,7 +47,7 @@ namespace backend_api.Controllers
                 var ratings = await _ratingService.GetProductRatings(productId);
                 return Ok(ratings);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -83,10 +84,10 @@ namespace backend_api.Controllers
                 await _ratingService.DeleteRating(userId, productId);
                 return Ok(new { message = "Rating deleted successfullty ! " });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-        } 
+        }
     }
 }

@@ -36,9 +36,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
             .HasForeignKey(o => o.UserId);
 
         modelBuilder.Entity<Product>().HasData(
-            new Product { Id = 1, Name = "T-shirt", Type = "T-shirt", Price = 19.99m, Stock = 50, ImageUrl = "logo/logo_name.jpg" },
-            new Product { Id = 2, Name = "Jean", Type = "Pantalon", Price = 50m, Stock = 50, ImageUrl = "logo/logo_name.jpg" },
-            new Product { Id = 3, Name = "Basket", Type = "Chaussures", Price = 79.99m, Stock = 50, ImageUrl = "logo/logo_name.jpg" }
+            new Product { Id = 1, SellerId = "261b56a2-1933-4742-ac36-a1e083920dac", Name = "T-shirt", Type = "Clothing", Price = 19.99m, Stock = 50, ImageUrl = "logo/logo_name.jpg" },
+            new Product { Id = 2, SellerId = "261b56a2-1933-4742-ac36-a1e083920dac", Name = "Jean", Type = "Clothing", Price = 50m, Stock = 50, ImageUrl = "logo/logo_name.jpg" },
+            new Product { Id = 3, SellerId = "261b56a2-1933-4742-ac36-a1e083920dac", Name = "Basket", Type = "Clothing", Price = 79.99m, Stock = 50, ImageUrl = "logo/logo_name.jpg" }
         );
     }
 

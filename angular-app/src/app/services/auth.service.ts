@@ -8,6 +8,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  roles?: string[];
 }
 
 export interface LoginRequest {
@@ -33,58 +34,59 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5147/api/Auth'; 
+  private apiUrl = 'http://localhost:5147/api/Auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.checkExistingAuth();
+    // Vérifie si l’utilisateur est déjà connecté grâce au cookie
+    this.checkAuth().subscribe();
   }
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
+  login(credentials: LoginRequest): Observable<any> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/login`, credentials)
+      .post<any>(`${this.apiUrl}/login`, credentials, { withCredentials: true })
       .pipe(
         tap((response) => {
-          console.log('Login réussi:', response);
-          this.setCurrentUser(response.user, response.token);
+          if (response.success) {
+            this.currentUserSubject.next(response.user);
+            console.log('Login réussi:', response);
+          }
         })
       );
   }
 
-  register(userData: RegisterRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
-      `${this.apiUrl}/register`,
-      userData
-    );
+  register(userData: RegisterRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, userData, {
+      withCredentials: true,
+    });
   }
 
   logout(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/logout`, {}).pipe(
-      tap(() => {
-        this.clearAuth();
-      })
-    );
+    return this.http
+      .post<any>(`${this.apiUrl}/logout`, {}, { withCredentials: true })
+      .pipe(
+        tap(() => {
+          this.clearAuth();
+        })
+      );
   }
 
-  // NOUVELLES MÉTHODES pour la gestion du profil
   updateProfile(profileData: UpdateProfileRequest): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/profile`, profileData).pipe(
-      tap((updatedUser) => {
-        // Mettre à jour l'utilisateur actuel avec les nouvelles données
-        this.currentUserSubject.next(updatedUser);
-        console.log('Profil mis à jour:', updatedUser);
+    return this.http
+      .put<User>(`${this.apiUrl}/profile`, profileData, {
+        withCredentials: true,
       })
-    );
+      .pipe(
+        tap((updatedUser) => {
+          this.currentUserSubject.next(updatedUser);
+          console.log('Profil mis à jour:', updatedUser);
+        })
+      );
   }
 
   changePassword(
@@ -92,28 +94,23 @@ export class AuthService {
   ): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(
       `${this.apiUrl}/change-password`,
-      passwordData
+      passwordData,
+      { withCredentials: true }
     );
   }
 
-  private setCurrentUser(user: User, token: string): void {
-    this.currentUserSubject.next(user);
-    (window as any).authToken = token;
-  }
-
-  // Nouvelle méthode pour mettre à jour l'utilisateur actuel
-  updateCurrentUser(user: User | null): void {
-    this.currentUserSubject.next(user);
-  }
-
-  private clearAuth(): void {
-    this.currentUserSubject.next(null);
-    delete (window as any).authToken;
-    console.log('Utilisateur déconnecté');
-  }
-
-  getToken(): string | null {
-    return (window as any).authToken || null;
+  checkAuth(): Observable<any> {
+    return this.http
+      .get<any>(`${this.apiUrl}/check-auth`, { withCredentials: true })
+      .pipe(
+        tap((res) => {
+          if (res.isAuthenticated) {
+            this.currentUserSubject.next(res.user);
+          } else {
+            this.clearAuth();
+          }
+        })
+      );
   }
 
   getCurrentUser(): User | null {
@@ -121,8 +118,11 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null && this.getToken() !== null;
+    return this.currentUserSubject.value !== null;
   }
 
-  private checkExistingAuth(): void {}
+  private clearAuth(): void {
+    this.currentUserSubject.next(null);
+    console.log('Utilisateur déconnecté');
+  }
 }
