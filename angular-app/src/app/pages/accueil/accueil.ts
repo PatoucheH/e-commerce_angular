@@ -1,18 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product.model';
+import { DetailProductComponent } from '../../components/detail-product/detail-product-component';
 
 @Component({
   selector: 'app-accueil',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, DetailProductComponent],
   templateUrl: './accueil.html',
 })
 export class Accueil {
   currentSlide = 0;
   products: Product[] = [];
   constructor(private productService: ProductService) {}
+  @ViewChild(DetailProductComponent)
+  detailProductComponent?: DetailProductComponent;
 
   ngOnInit(): void {
     this.productService.getProductsByRating(3).subscribe({
@@ -29,6 +32,11 @@ export class Accueil {
         console.error('Erreur lors du chargement des produits', err);
       },
     });
+  }
+
+  openModal(product: Product) {
+    console.log('open');
+    this.detailProductComponent?.open(product);
   }
 
   nextSlide() {
