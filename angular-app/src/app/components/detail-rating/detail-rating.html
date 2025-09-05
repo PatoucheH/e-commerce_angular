@@ -1,1 +1,96 @@
-<p>detail-rating works!</p>
+@if(isVisible) {
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] relative"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b">
+      <div>
+        <h3 class="text-2xl font-bold">Avis sur {{ product?.name }}</h3>
+        <div class="text-yellow-400 text-lg mt-1">
+          ★ {{ product?.averageRating }} ({{ reviews.length }} avis)
+        </div>
+      </div>
+      <button
+        (click)="close()"
+        class="text-gray-500 hover:text-gray-800 text-2xl font-bold p-2"
+      >
+        ✖
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="overflow-y-auto max-h-[60vh] p-6">
+      @if(loading) {
+      <div class="flex justify-center items-center py-8">
+        <div class="text-gray-500">Chargement des avis...</div>
+      </div>
+      } @else if(reviews.length === 0) {
+      <div class="text-center py-8">
+        <div class="text-gray-500 text-lg mb-2">Aucun avis pour ce produit</div>
+        <p class="text-gray-400">Soyez le premier à laisser un commentaire !</p>
+      </div>
+      } @else {
+      <div class="space-y-4">
+        @for(review of reviews; track review.id) {
+        <div class="border rounded-lg p-4 bg-gray-50">
+          <!-- Header de l'avis -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div
+                class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold"
+              >
+                {{ getInitials(review.userName) }}
+              </div>
+              <div>
+                <div class="font-semibold text-gray-800">
+                  {{ review.userName }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  {{ formatDate(review.createdAt) }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center">
+              @for(star of getStarsArray(review.rating); track $index) {
+              <span class="text-yellow-400">★</span>
+              } @for(emptyStar of getEmptyStarsArray(review.rating); track
+              $index) {
+              <span class="text-gray-300">★</span>
+              }
+              <span class="ml-2 text-sm font-semibold text-gray-600"
+                >{{ review.rating }}/5</span
+              >
+            </div>
+          </div>
+
+          <!-- Commentaire -->
+          @if(review.comment && review.comment.trim()) {
+          <div class="text-gray-700 leading-relaxed">
+            {{ review.comment }}
+          </div>
+          } @else {
+          <div class="text-gray-400 italic">Aucun commentaire</div>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t p-6 flex justify-end">
+      <button
+        (click)="close()"
+        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+      >
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>
+}

@@ -1,34 +1,42 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { Product } from '../../models/product.model';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProductService } from '../../services/product.service';
+import { RateService } from '../../services/rate.service';
 import { Products } from '../../pages/products/products';
+import { RatingModalComponent } from '../rate-product/rate-product';
+import { ReviewsModalComponent } from '../detail-rating/detail-rating';
 
 @Component({
   selector: 'app-product-modal',
-  imports: [FormsModule, MatSnackBarModule],
-  templateUrl: './detail-product-component.html',
+  imports: [
+    FormsModule,
+    MatSnackBarModule,
+    RatingModalComponent,
+    ReviewsModalComponent,
+  ],
+  templateUrl: 'detail-product-component.html',
 })
 export class DetailProductComponent {
   @Input() product!: Product;
   @Input() parent!: Products;
+  @ViewChild('ratingModal') ratingModal!: RatingModalComponent;
+
   isVisible: boolean = false;
-
   ratingVisible: boolean = false;
-  ratingValue: number = 0;
-  ratingComment: string = '';
-
+  reviewsVisible: boolean = false;
   quantity: number = 1;
-
   userId: string = '';
+
   constructor(
     private cartService: CartService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private productService: ProductService
+    private productService: ProductService,
+    private rateService: RateService
   ) {}
 
   open(product: Product) {
@@ -70,6 +78,7 @@ export class DetailProductComponent {
       });
     }
   }
+
   deleteProduct() {
     if (!this.product) return;
 
@@ -101,27 +110,30 @@ export class DetailProductComponent {
 
   openRatingModal() {
     this.ratingVisible = true;
-    this.ratingValue = 0;
-    this.ratingComment = '';
   }
 
   closeRatingModal() {
     this.ratingVisible = false;
   }
 
-  submitRating() {
-    if (this.ratingValue < 1 || this.ratingValue > 5) return;
+  openReviewsModal() {
+    this.reviewsVisible = true;
+  }
 
-    this.productService
-      .rateProduct(this.product.id, this.ratingValue, this.ratingComment)
+  closeReviewsModal() {
+    this.reviewsVisible = false;
+  }
+
+  onRatingSubmitted(event: { rating: number; comment: string }) {
+    this.rateService
+      .rateProduct(this.product.id, event.rating, event.comment)
       .subscribe({
         next: () => {
           this.snackBar.open(
-            `Merci pour votre note : ${this.ratingValue} ⭐`,
+            `Merci pour votre note : ${event.rating} ⭐`,
             'Fermer',
             { duration: 3000 }
           );
-          this.closeRatingModal();
           this.parent?.chargerProducts();
         },
         error: (error) => {

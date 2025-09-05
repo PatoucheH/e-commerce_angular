@@ -6,6 +6,7 @@ namespace backend_api.Models
     {
         public int Id { get; set; }
         public required string UserId { get; set; }
+        public string? UserName { get; set; }
         public int ProductId { get; set; }
         [Range(1, 5)]
         public int Rating { get; set; }

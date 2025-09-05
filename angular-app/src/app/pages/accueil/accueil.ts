@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ProductService } from '../../services/product.service';
+import { Product } from '../../models/product.model';
 
 @Component({
   selector: 'app-accueil',
@@ -9,46 +11,44 @@ import { RouterLink } from '@angular/router';
 })
 export class Accueil {
   currentSlide = 0;
+  products: Product[] = [];
+  constructor(private productService: ProductService) {}
 
-  produits = [
-    {
-      name: 'T-shirt',
-      price: 6.99,
-      image:
-        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
-    },
-    {
-      name: 'Jean',
-      price: 25,
-      image:
-        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
-    },
-    {
-      name: 'Basket',
-      price: 100,
-      image:
-        'http://localhost:5147/Images/Products/00b8cbdd-885e-49d3-9173-0e3e9d0966ac.jpg',
-    },
-  ];
+  ngOnInit(): void {
+    this.productService.getProductsByRating(3).subscribe({
+      next: (data) => {
+        console.log(data);
+        this.products = data.map((p) => ({
+          ...p,
+          imageUrl: p.imageUrl
+            ? `http://localhost:5147${p.imageUrl}`
+            : `logo/logo_name.jpg`,
+        }));
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des produits', err);
+      },
+    });
+  }
 
   nextSlide() {
-    this.currentSlide = (this.currentSlide + 1) % this.produits.length;
+    this.currentSlide = (this.currentSlide + 1) % this.products.length;
   }
 
   prevSlide() {
     this.currentSlide =
       this.currentSlide === 0
-        ? this.produits.length - 1
+        ? this.products.length - 1
         : this.currentSlide - 1;
   }
 
   getPrevIndex(): number {
     return this.currentSlide === 0
-      ? this.produits.length - 1
+      ? this.products.length - 1
       : this.currentSlide - 1;
   }
 
   getNextIndex(): number {
-    return (this.currentSlide + 1) % this.produits.length;
+    return (this.currentSlide + 1) % this.products.length;
   }
 }

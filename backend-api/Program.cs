@@ -21,12 +21,6 @@ public class Program
             ".env"
         );
         Env.Load(envPath);
-        Console.WriteLine("Chargement .env depuis : " + envPath);
-        Console.WriteLine("STRIPE_SECRET_KEY = " + Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY"));
-
-
-
-
         var builder = WebApplication.CreateBuilder(args);
 
         //Postgre connection

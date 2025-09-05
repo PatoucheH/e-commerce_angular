@@ -7,7 +7,7 @@ namespace backend_api.Services
 {
     public interface IRatingService
     {
-        Task AddOrUpdateRating(string userId, int productId, int rating, string comment);
+        Task AddOrUpdateRating(string userId, string userName, int productId, int rating, string comment);
         Task<IEnumerable<RatingDto>> GetProductRatings(int productId);
         Task<RatingDto?> GetUserRating(string userId, int productId);
         Task DeleteRating(string userId, int productId);
@@ -23,23 +23,24 @@ namespace backend_api.Services
             _userManager = userManager;
             _context = context;
         }
-        public async Task AddOrUpdateRating(string userId, int productId, int rating, string comment)
+        public async Task AddOrUpdateRating(string userId, string userName, int productId, int rating, string comment)
         {
             if (rating < 1 || rating > 5)
                 throw new ArgumentException("Rating must be between 1 and 5");
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user is null)
                 throw new Exception("User not found");
-            
+
             var product = await _context.Products.Include(p => p.Ratings).FirstOrDefaultAsync(p => p.Id == productId);
             if (product is null)
                 throw new Exception("Product not found");
             var rateOfUser = product.Ratings.FirstOrDefault(r => r.UserId == userId);
-            if(rateOfUser is null)
+            if (rateOfUser is null)
             {
                 product.Ratings.Add(new ProductsRatings
                 {
                     UserId = userId,
+                    UserName = userName,
                     ProductId = productId,
                     Rating = rating,
                     Comment = comment,
@@ -85,17 +86,15 @@ namespace backend_api.Services
                 Comment = rating.Comment,
                 CreatedAt = rating.CreatedAt,
             };
-
         }
 
         public async Task DeleteRating(string userId, int productId)
         {
             var rating = await _context.Ratings.FirstOrDefaultAsync(r => r.UserId == userId && r.ProductId == productId);
-            if (rating is null) 
+            if (rating is null)
                 throw new Exception("Rating not found");
             _context.Ratings.Remove(rating);
             await _context.SaveChangesAsync();
         }
     }
-
 }

@@ -2,6 +2,7 @@
 using backend_api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend_api.Controllers
 {
@@ -11,10 +12,12 @@ namespace backend_api.Controllers
     public class RatingController : ControllerBase
     {
         private readonly IRatingService _ratingService;
+        private readonly AppDbContext _context;
 
-        public RatingController(IRatingService ratingService)
+        public RatingController(IRatingService ratingService, AppDbContext context)
         {
             _ratingService = ratingService;
+            _context = context;
         }
 
         [HttpPost]
@@ -26,12 +29,26 @@ namespace backend_api.Controllers
                 if (userId is null)
                     return Unauthorized("User not authenticated");
 
-                await _ratingService.AddOrUpdateRating(userId, request.ProductId, request.Rating, request.Comment);
+                // Récupérer FirstName et LastName depuis la base
+                var user = await _context.Users
+                    .Where(u => u.Id == userId)
+                    .Select(u => new { u.FirstName, u.LastName, u.Email, u.UserName })
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                    return BadRequest("User not found");
+
+                // Construire le nom complet
+                var userName = $"{user.FirstName} {user.LastName}".Trim();
+
+                // Si vide, utiliser email ou username
+                if (string.IsNullOrWhiteSpace(userName))
+                {
+                    userName = user.Email?.Split('@')[0] ?? user.UserName ?? "Utilisateur";
+                }
+
+                await _ratingService.AddOrUpdateRating(userId, userName, request.ProductId, request.Rating, request.Comment);
                 return Ok(new { message = "Rating added/updated successfully !" });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {

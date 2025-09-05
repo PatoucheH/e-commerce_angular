@@ -12,6 +12,7 @@ public interface IProductsService
     public Task AddProduct(Product product);
     public Task UpdateProduct(int id, Product product);
     public Task DeleteProduct(int id);
+    public Task<List<ProductDto>> GetBestProductsByRatings(int nbrProduct);
 }
 
 
@@ -98,5 +99,28 @@ public class ProductsService : IProductsService
             throw new Exception("Product not found");
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<ProductDto>> GetBestProductsByRatings(int nbrProduct)
+    {
+        return await _context.Products.Select(p =>
+        new ProductDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            SellerId = p.SellerId,
+            Price = p.Price,
+            Type = p.Type,
+            Description = p.Description,
+            ImageUrl = p.ImageUrl,
+            Stock = p.Stock,
+            AverageRating = p.Ratings.Any() ? p.Ratings.Average(r => r.Rating) : 0,
+            TotalRatings = p.Ratings.Count(),
+        })
+        .OrderByDescending(p => p.AverageRating)
+        .ThenByDescending(p => p.TotalRatings)
+        .Take(nbrProduct)
+        .ToListAsync();
+
     }
 }

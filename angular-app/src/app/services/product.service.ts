@@ -49,15 +49,9 @@ export class ProductService {
     return this.http.post('http://localhost:5147/api/Upload', formData);
   }
 
-  rateProduct(productId: number, rating: number, comment?: string) {
-    return this.http.post(
-      `http://localhost:5147/api/Rating`,
-      {
-        productId,
-        rating,
-        comment: comment || '',
-      },
-      { withCredentials: true }
+  getProductsByRating(nbrProduct: number = 3): Observable<Product[]> {
+    return this.http.get<Product[]>(
+      `${this.apiUrl}/top-rated`
     );
   }
 }

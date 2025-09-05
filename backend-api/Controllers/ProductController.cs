@@ -54,4 +54,12 @@ public class ProductsController : ControllerBase
         return Ok();
     }
 
+    [HttpGet("top-rated")]
+    public async Task<IActionResult> GetTopRated([FromQuery] int count = 3)
+    {
+        var products = await _productsService.GetBestProductsByRatings(count);
+        return Ok(products);
+    }
+
+
 }
