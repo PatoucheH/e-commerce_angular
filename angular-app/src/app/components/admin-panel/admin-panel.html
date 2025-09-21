@@ -1,0 +1,490 @@
+<div class="space-y-6">
+  <!-- En-tête du panel admin -->
+  <div
+    class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-lg text-white"
+  >
+    <h2 class="text-2xl font-bold mb-2">Panel d'Administration</h2>
+    <p class="opacity-90">Gestion des commandes et statistiques</p>
+  </div>
+
+  <!-- Messages -->
+  @if(successMessage) {
+
+  <div class="p-4 bg-green-50 border border-green-300 rounded-md">
+    <p class="text-sm text-green-700">{{ successMessage }}</p>
+  </div>
+  } @if(errorMessage){
+
+  <div class="p-4 bg-red-50 border border-red-300 rounded-md">
+    <p class="text-sm text-red-700">{{ errorMessage }}</p>
+  </div>
+  }
+
+  <!-- Statistiques -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="bg-white p-6 rounded-lg shadow-sm border">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div
+            class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center"
+          >
+            <svg
+              class="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Total Commandes</p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ stats?.totalOrders || 0 }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-sm border">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div
+            class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center"
+          >
+            <svg
+              class="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Chiffre d'affaires</p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{
+              stats?.totalRevenue || 0 | currency : "EUR" : "symbol" : "1.2-2"
+            }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-sm border">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div
+            class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center"
+          >
+            <svg
+              class="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">En Attente</p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ stats?.pendingOrders || 0 }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-sm border">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div
+            class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center"
+          >
+            <svg
+              class="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Panier Moyen</p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{
+              stats?.averageOrderValue || 0
+                | currency : "EUR" : "symbol" : "1.2-2"
+            }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres et actions -->
+  <div class="bg-white p-4 rounded-lg shadow-sm border">
+    <div class="flex flex-wrap gap-4 items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Gestion des commandes</h3>
+
+      <select
+        [(ngModel)]="selectedStatus"
+        (change)="onStatusFilterChange()"
+        class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option [ngValue]="undefined">Tous les statuts</option>
+        <option [ngValue]="OrderStatus.Pending">En attente</option>
+        <option [ngValue]="OrderStatus.Confirmed">
+          En cours de traitement
+        </option>
+        <option [ngValue]="OrderStatus.Shipped">Expédiée</option>
+        <option [ngValue]="OrderStatus.Delivered">Livrée</option>
+      </select>
+
+      <span class="text-sm text-gray-500 ml-auto">
+        {{ filteredOrders.length }} commande(s) affichée(s)
+      </span>
+    </div>
+  </div>
+
+  <!-- Chargement -->
+  @if(loading){
+
+  <div class="flex justify-center py-8">
+    <svg
+      class="animate-spin h-8 w-8 text-blue-600"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+  </div>
+  }
+
+  <!-- Liste des commandes -->
+  @if(!loading){
+
+  <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+    @if(filteredOrders.length === 0){
+
+    <div class="p-8 text-center text-gray-500">
+      <svg
+        class="mx-auto h-12 w-12 text-gray-400 mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        />
+      </svg>
+      <p class="text-lg font-medium text-gray-900">Aucune commande trouvée</p>
+      <p class="text-gray-500">
+        Il n'y a pas de commandes correspondant aux critères sélectionnés.
+      </p>
+    </div>
+    } @if(filteredOrders.length > 0){
+
+    <div>
+      <!-- Version mobile -->
+      <div class="md:hidden">
+        @for(order of filteredOrders; track order.id){
+        <div class="p-4 border-b border-gray-200 last:border-b-0">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <p class="font-semibold text-gray-900">
+                Commande #{{ order.id }}
+              </p>
+              <p class="text-sm text-gray-600">
+                {{ formatDate(order.createdAt) }}
+              </p>
+              <p class="text-sm text-gray-600">Client: {{ order.userId }}</p>
+            </div>
+            <div class="text-right">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [class]="getStatusColor(order.status)"
+              >
+                {{ getStatusLabel(order.status) }}
+              </span>
+              <p class="text-lg font-semibold text-gray-900 mt-1">
+                {{ order.totalPrice | currency : "EUR" : "symbol" : "1.2-2" }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 mb-3">
+            <select
+              [(ngModel)]="order.newStatus"
+              class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+            >
+              <option [value]="OrderStatus.Pending">En attente</option>
+              <option [value]="OrderStatus.Confirmed">En cours</option>
+              <option [value]="OrderStatus.Shipped">Expédiée</option>
+              <option [value]="OrderStatus.Delivered">Livrée</option>
+            </select>
+
+            <button
+              (click)="updateOrderStatus(order)"
+              [disabled]="
+                order.newStatus === undefined ||
+                order.newStatus === order.status
+              "
+              class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Modifier
+            </button>
+          </div>
+
+          <button
+            (click)="toggleOrderDetails(order)"
+            class="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded border border-blue-200"
+          >
+            {{
+              selectedOrderId === order.id
+                ? "Masquer les détails"
+                : "Voir les détails"
+            }}
+          </button>
+
+          <!-- Détails mobile -->
+          @if(selectedOrderId === order.id){
+
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="space-y-2">
+              <h4 class="font-medium text-gray-900">Articles :</h4>
+              @for(item of order.itemList; track item.id){
+
+              <div
+                class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded"
+              >
+                <div>
+                  <p class="font-medium text-gray-900">
+                    {{ item.productName }}
+                  </p>
+                  <p class="text-sm text-gray-600">
+                    Quantité : {{ item.quantity }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="font-semibold text-gray-900">
+                    {{ item.unitPrice | currency : "EUR" : "symbol" : "1.2-2" }}
+                  </p>
+                  <p class="text-sm text-gray-600">
+                    Total :
+                    {{
+                      item.quantity * item.unitPrice
+                        | currency : "EUR" : "symbol" : "1.2-2"
+                    }}
+                  </p>
+                </div>
+              </div>
+              }
+              <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-sm text-gray-600">
+                  <strong>Livraison :</strong> {{ order.shippingAddress }}
+                </p>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Version desktop -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Commande
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Client
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Date
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Total
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Statut
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @for(order of filteredOrders; track order.id){
+
+            <tr class="hover:bg-gray-50">
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+              >
+                #{{ order.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ order.userId }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(order.createdAt) }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900"
+              >
+                {{ order.totalPrice | currency : "EUR" : "symbol" : "1.2-2" }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [class]="getStatusColor(order.status)"
+                >
+                  {{ getStatusLabel(order.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <div class="flex items-center space-x-2">
+                  <select
+                    [(ngModel)]="order.newStatus"
+                    class="border border-gray-300 rounded px-2 py-1 text-xs"
+                  >
+                    <option [value]="OrderStatus.Pending">En attente</option>
+                    <option [value]="OrderStatus.Confirmed">En cours</option>
+                    <option [value]="OrderStatus.Shipped">Expédiée</option>
+                    <option [value]="OrderStatus.Delivered">Livrée</option>
+                  </select>
+
+                  <button
+                    (click)="updateOrderStatus(order)"
+                    [disabled]="
+                      order.newStatus === undefined ||
+                      order.newStatus === order.status
+                    "
+                    class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    Modifier
+                  </button>
+
+                  <button
+                    (click)="toggleOrderDetails(order)"
+                    class="text-blue-600 hover:text-blue-800 text-xs"
+                  >
+                    {{ selectedOrderId === order.id ? "Masquer" : "Détails" }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Détails desktop -->
+            @if(selectedOrderId === order.id){
+            <tr>
+              <td colspan="6" class="px-6 py-4 bg-gray-50">
+                <div class="space-y-2">
+                  <h4 class="font-medium text-gray-900">
+                    Articles commandés :
+                  </h4>
+                  <div class="grid gap-2">
+                    @for(item of order.itemList; track item.id){
+                    <div
+                      class="flex justify-between items-center py-2 px-3 bg-white rounded border"
+                    >
+                      <div>
+                        <p class="font-medium text-gray-900">
+                          {{ item.productName }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                          Quantité : {{ item.quantity }}
+                        </p>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-semibold text-gray-900">
+                          {{
+                            item.unitPrice
+                              | currency : "EUR" : "symbol" : "1.2-2"
+                          }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                          Total :
+                          {{
+                            item.quantity * item.unitPrice
+                              | currency : "EUR" : "symbol" : "1.2-2"
+                          }}
+                        </p>
+                      </div>
+                    </div>
+                    }
+                  </div>
+                  <div class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-sm text-gray-600">
+                      <strong>Adresse de livraison :</strong>
+                      {{ order.shippingAddress }}
+                    </p>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            } }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

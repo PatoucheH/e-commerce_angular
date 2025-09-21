@@ -1,5 +1,8 @@
 <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
   @if (cart && cart.itemList && cart.itemList.length > 0) {
+
+  <!-- ✅ Vue normale du panier -->
+  @if (!showAddressForm) {
   <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
     <div class="flex items-center">
       <i class="fas fa-shopping-cart text-white text-xl mr-3"></i>
@@ -64,7 +67,7 @@
         Continuer mes achats
       </button>
       <button
-        (click)="checkout()"
+        (click)="proceedToCheckout()"
         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
       >
         <i class="fas fa-credit-card"></i>
@@ -72,8 +75,132 @@
       </button>
     </div>
   </div>
+  }
 
-  } @else {
+  <!-- ✅ Formulaire d'adresse de livraison -->
+  @if (showAddressForm) {
+  <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+    <div class="flex items-center">
+      <i class="fas fa-truck text-white text-xl mr-3"></i>
+      <h2 class="text-2xl font-bold text-white">Adresse de livraison</h2>
+    </div>
+  </div>
+
+  <div class="p-6">
+    <!-- Résumé de la commande -->
+    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+      <h3 class="font-semibold text-gray-800 mb-2">Résumé de votre commande</h3>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-600">{{ cart.itemList.length }} article(s)</span>
+        <span class="font-bold text-blue-600">{{ cart.totalPrice }} €</span>
+      </div>
+    </div>
+
+    <!-- Formulaire -->
+    <form (ngSubmit)="finalizeOrder()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Nom complet *
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="shippingAddress.fullName"
+          name="fullName"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ex: Jean Dupont"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Adresse *
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="shippingAddress.streetAddress"
+          name="streetAddress"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ex: 123 Rue de la Paix"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Code postal *
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="shippingAddress.postalCode"
+            name="postalCode"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ex: 75001"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Ville *
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="shippingAddress.city"
+            name="city"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ex: Paris"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Pays
+        </label>
+        <select
+          [(ngModel)]="shippingAddress.country"
+          name="country"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="France">France</option>
+          <option value="Belgique">Belgique</option>
+          <option value="Suisse">Suisse</option>
+        </select>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="flex space-x-3 mt-8">
+        <button
+          type="button"
+          (click)="backToCart()"
+          class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Retour au panier
+        </button>
+        <button
+          type="submit"
+          [disabled]="!isFormValid() || isProcessing"
+          [class]="
+            isFormValid() && !isProcessing
+              ? 'flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2'
+              : 'flex-1 bg-gray-400 text-gray-600 font-semibold py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2'
+          "
+        >
+          @if (isProcessing) {
+          <i class="fas fa-spinner fa-spin mr-2"></i>
+          <span>Traitement en cours...</span>
+          } @else {
+          <i class="fas fa-credit-card"></i>
+          <span>Payer maintenant</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  } } @else {
   <!-- Panier vide -->
   <div class="text-center py-16 px-6">
     <div class="mb-6">

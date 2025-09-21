@@ -64,5 +64,21 @@ namespace backend_api.Controllers
             await _orderService.UpdateOrderByStatus(orderId, newStatus);
             return Ok(new { message = "Statut de la commande mis à jour" });
         }
+
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllOrders()
+        {
+            var orders = await _orderService.GetAllOrders();
+            return Ok(orders);
+        }
+
+        [HttpGet("admin/stats")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetOrderStats()
+        {
+            var stats = await _orderService.GetOrderStatistics();
+            return Ok(stats);
+        }
     }
 }

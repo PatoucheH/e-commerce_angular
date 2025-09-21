@@ -1,12 +1,9 @@
-// user-info.component.ts
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  AuthService,
-  UpdateProfileRequest,
-  User,
-} from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../models/user.model';
+import { UpdateProfileRequest } from '../../models/request-profile/updateProfilRequest.model';
 
 @Component({
   selector: 'app-user-info',

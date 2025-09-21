@@ -1,13 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService, User } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { AuthFormComponent } from '../../components/account-form/account-form';
 import { UserProfileComponent } from '../../components/account-profile/account-profile';
+import { AdminPanelComponent } from '../../components/admin-panel/admin-panel';
+import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-account',
-  imports: [CommonModule, AuthFormComponent, UserProfileComponent],
+  standalone: true,
+  imports: [
+    CommonModule,
+    AuthFormComponent,
+    UserProfileComponent,
+    AdminPanelComponent,
+  ],
   templateUrl: './account.html',
 })
 export class Account implements OnInit {
@@ -61,5 +69,8 @@ export class Account implements OnInit {
 
   get isProfileMode(): boolean {
     return this.pageMode === 'profile';
+  }
+  get isAdmin(): boolean {
+    return this.user?.roles?.includes('Admin') ?? false;
   }
 }

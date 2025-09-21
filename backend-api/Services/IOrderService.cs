@@ -13,6 +13,8 @@ namespace backend_api.Services
         public Task<IEnumerable<OrderDto>> GetUserOrders(string userId);
         public Task<OrderDto> GetOrderById(int orderId);
         public Task UpdateOrderByStatus(int orderId, OrderStatus newStatus);
+        public Task<IEnumerable<OrderDto>> GetAllOrders();
+        public Task<OrderStatisticsDto> GetOrderStatistics();
     }
 
     public class OrderService : IOrderService
@@ -66,7 +68,7 @@ namespace backend_api.Services
                 Id = order.Id,
                 UserId = order.UserId,
                 Status = order.Status,
-                Total = order.Total,
+                TotalPrice = order.Total,
                 ShippingAddress = shippingAddress
             };
         }
@@ -79,10 +81,11 @@ namespace backend_api.Services
             {
                 Id = order.Id,
                 UserId = order.UserId,
-                Total = order.Total,
+                CreatedAt = order.CreatedAt,
+                TotalPrice = order.Total,
                 Status = order.Status,
                 ShippingAddress = order.ShippingAddress,
-                Items = order.Items.Select(item => new OrderItemDto
+                ItemList = order.Items.Select(item => new OrderItemDto
                 {
                     Id = item.Id,
                     ProductId = item.ProductId,
@@ -104,10 +107,10 @@ namespace backend_api.Services
             {
                 Id = order.Id,
                 UserId = order.UserId,
-                Total = order.Total,
+                TotalPrice = order.Total,
                 Status = order.Status,
                 ShippingAddress = order.ShippingAddress,
-                Items = order.Items.Select(item => new OrderItemDto
+                ItemList = order.Items.Select(item => new OrderItemDto
                 {
                     Id = item.Id,
                     ProductId = item.ProductId,
@@ -126,6 +129,47 @@ namespace backend_api.Services
             order.Status = newStatus;
             await _context.SaveChangesAsync();
             Console.WriteLine($"Status successfully changed in {newStatus}");
+        }
+        public async Task<IEnumerable<OrderDto>> GetAllOrders()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.Items)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+
+            return orders.Select(order => new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                TotalPrice = order.Total,
+                Status = order.Status,
+                ShippingAddress = order.ShippingAddress,
+                CreatedAt = order.CreatedAt,
+                ItemList = order.Items.Select(item => new OrderItemDto
+                {
+                    Id = item.Id,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                }).ToList()
+            }).ToList();
+        }
+
+        public async Task<OrderStatisticsDto> GetOrderStatistics()
+        {
+            var orders = await _context.Orders.ToListAsync();
+
+            return new OrderStatisticsDto
+            {
+                TotalOrders = orders.Count,
+                PendingOrders = orders.Count(o => o.Status == OrderStatus.Pending),
+                ConfirmedOrders = orders.Count(o => o.Status == OrderStatus.Confirmed),
+                ShippedOrders = orders.Count(o => o.Status == OrderStatus.Shipped),
+                DeliveredOrders = orders.Count(o => o.Status == OrderStatus.Delivered),
+                TotalRevenue = orders.Sum(o => o.Total),
+                AverageOrderValue = orders.Any() ? orders.Average(o => o.Total) : 0
+            };
         }
     }
 }

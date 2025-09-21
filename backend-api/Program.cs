@@ -15,7 +15,6 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        // Env.Load(Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.FullName, ".env"));
         var envPath = Path.Combine(
             Directory.GetParent(Directory.GetCurrentDirectory())!.FullName,
             ".env"
@@ -57,24 +56,38 @@ public class Program
             .AddCookie(options =>
             {
                 options.Cookie.Name = "AuthCookie";
-                options.Cookie.HttpOnly = true; // Sécurité : empêche l'accès JavaScript
+                options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
                     ? CookieSecurePolicy.SameAsRequest
-                    : CookieSecurePolicy.Always; // HTTPS en prod
-                options.Cookie.SameSite = SameSiteMode.Lax; // Lax pour dev, Strict pour prod
+                    : CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Lax;
                 options.ExpireTimeSpan = TimeSpan.FromDays(30);
-                options.SlidingExpiration = true; // Renouvelle automatiquement
+                options.SlidingExpiration = true;
 
-                // Gestion des erreurs d'authentification
+                // CORRECTION IMPORTANTE : Gestion spécifique pour les API
                 options.Events.OnRedirectToLogin = context =>
                 {
-                    context.Response.StatusCode = 401;
+                    // Vérifier si c'est une requête API
+                    if (context.Request.Path.StartsWithSegments("/api") &&
+                        context.Response.StatusCode == 200) // Seulement si pas encore défini
+                    {
+                        context.Response.StatusCode = 401;
+                        context.Response.Headers["Content-Type"] = "application/json";
+                        return context.Response.WriteAsync("{\"message\":\"Non authentifié\"}");
+                    }
+                    // Pour les autres requêtes, comportement par défaut
                     return Task.CompletedTask;
                 };
 
                 options.Events.OnRedirectToAccessDenied = context =>
                 {
-                    context.Response.StatusCode = 403;
+                    if (context.Request.Path.StartsWithSegments("/api") &&
+                        context.Response.StatusCode == 200)
+                    {
+                        context.Response.StatusCode = 403;
+                        context.Response.Headers["Content-Type"] = "application/json";
+                        return context.Response.WriteAsync("{\"message\":\"Accès refusé\"}");
+                    }
                     return Task.CompletedTask;
                 };
             });
@@ -83,8 +96,6 @@ public class Program
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "backend_api", Version = "v1" });
-            // Note: Swagger avec cookies nécessite une configuration différente
-            // Pour les tests, vous devrez vous connecter via l'endpoint /api/auth/login
         });
 
         //Services
@@ -111,17 +122,30 @@ public class Program
                 policy.WithOrigins(allowedOrigins)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowCredentials();
+                    .AllowCredentials(); // CRUCIAL pour les cookies
             });
         });
 
         var app = builder.Build();
 
-        //Pipeline
-        app.UseSwagger();
-        app.UseSwaggerUI();
+        //Pipeline - ORDRE IMPORTANT
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
+        // CORRECTION : CORS doit être avant Authentication
         app.UseCors("AngularApp");
+
+        // Configuration for static's files
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(
+               Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images")),
+            RequestPath = "/Images",
+        });
+
         app.UseAuthentication(); // Toujours avant UseAuthorization
         app.UseAuthorization();
         app.MapControllers();
@@ -134,14 +158,6 @@ public class Program
             var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeederService>();
             await roleSeeder.SeedRolesAndAdminAsync();
         }
-
-        //Configuration for static's files
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(
-               Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images")),
-            RequestPath = "/Images",
-        });
 
         app.Run();
     }

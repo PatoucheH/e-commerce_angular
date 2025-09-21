@@ -1,12 +1,9 @@
-// auth-form.component.ts
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  AuthService,
-  LoginRequest,
-  RegisterRequest,
-} from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { LoginRequest } from '../../models/request-profile/loginRequest.model';
+import { RegisterRequest } from '../../models/request-profile/registerRequest.model';
 
 @Component({
   selector: 'app-auth-form',

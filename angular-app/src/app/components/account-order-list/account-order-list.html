@@ -5,15 +5,15 @@
 
   <div class="p-6">
     <!-- Message d'erreur -->
-    <div
-      *ngIf="ordersError"
-      class="mb-4 p-4 bg-red-50 border border-red-300 rounded-md"
-    >
+    @if(ordersError){
+    <div class="mb-4 p-4 bg-red-50 border border-red-300 rounded-md">
       <p class="text-sm text-red-700">{{ ordersError }}</p>
     </div>
+    }
 
     <!-- Chargement -->
-    <div *ngIf="ordersLoading" class="flex justify-center py-8">
+    @if(ordersLoading){
+    <div class="flex justify-center py-8">
       <svg
         class="animate-spin h-8 w-8 text-blue-600"
         fill="none"
@@ -34,11 +34,13 @@
         ></path>
       </svg>
     </div>
+    }
 
     <!-- Liste des commandes -->
-    <div *ngIf="!ordersLoading && orders.length > 0" class="space-y-4">
+    @if(!ordersLoading && orders.length > 0){
+    <div class="space-y-4">
+      @for(order of orders; track order.id){
       <div
-        *ngFor="let order of orders"
         class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
       >
         <!-- En-tête de la commande -->
@@ -57,7 +59,7 @@
               {{ getStatusLabel(order.status) }}
             </span>
             <p class="text-lg font-semibold text-gray-900 mt-1">
-              {{ order.total }}€
+              {{ order.totalPrice }}€
             </p>
           </div>
         </div>
@@ -83,14 +85,12 @@
         </button>
 
         <!-- Détails de la commande (expandable) -->
-        <div
-          *ngIf="selectedOrder?.id === order.id"
-          class="mt-4 pt-4 border-t border-gray-200"
-        >
+        @if(selectedOrder?.id === order.id){
+        <div class="mt-4 pt-4 border-t border-gray-200">
           <h4 class="font-medium text-gray-900 mb-3">Articles commandés :</h4>
           <div class="space-y-2">
+            @for(item of order.itemList; track item.id){
             <div
-              *ngFor="let item of order.items"
               class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded"
             >
               <div>
@@ -108,13 +108,19 @@
                 </p>
               </div>
             </div>
+            }
           </div>
         </div>
+        }
       </div>
+      }
     </div>
+    }
 
     <!-- Aucune commande -->
-    <div *ngIf="!ordersLoading && orders.length === 0" class="text-center py-8">
+    @if(!ordersLoading && orders.length === 0){
+
+    <div class="text-center py-8">
       <div class="text-gray-400 mb-4">
         <svg
           class="mx-auto h-12 w-12"
@@ -141,5 +147,6 @@
         Découvrir nos produits
       </a>
     </div>
+    }
   </div>
 </div>

@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, ChangePasswordRequest } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { ChangePasswordRequest } from '../../models/request-profile/changePasswordrequest.model';
 
 @Component({
   selector: 'app-password-change',
   imports: [CommonModule, FormsModule],
-  templateUrl: "account-password-change.html" ,
+  templateUrl: 'account-password-change.html',
 })
 export class PasswordChangeComponent {
   passwordLoading = false;

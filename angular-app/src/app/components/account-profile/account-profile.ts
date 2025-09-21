@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { User } from '../../services/auth.service';
+import { User } from '../../models/user.model';
 import { AccountInfoComponent } from '../account-info/account-info';
 import { PasswordChangeComponent } from '../account-password-change/account-password-change';
 import { OrdersListComponent } from '../account-order-list/account-order-list';

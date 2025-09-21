@@ -1,34 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-export interface OrderItem {
-  id: number;
-  productId: number;
-  productName?: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-export interface Order {
-  id: number;
-  userId: string;
-  createdAt: string;
-  total: number;
-  status: OrderStatus;
-  shippingAddress: string;
-  items: OrderItem[];
-}
-
-export enum OrderStatus {
-  Pending = 0,
-  Confirmed = 1,
-  Shipped = 2,
-  Delivered = 3,
-}
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Order } from '../models/order/order.model';
+import { OrderStatus } from '../models/order/orderStatus.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OrderService {
   private apiUrl = 'http://localhost:5147/api/Order';
@@ -36,7 +14,9 @@ export class OrderService {
   constructor(private http: HttpClient) {}
 
   getUserOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}`);
+    return this.http
+      .get<Order[]>(`${this.apiUrl}`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   getOrderById(orderId: number): Observable<Order> {
@@ -73,5 +53,33 @@ export class OrderService {
       default:
         return 'text-gray-600 bg-gray-50';
     }
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = '';
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Erreur: ${error.error.message}`;
+    } else {
+      switch (error.status) {
+        case 401:
+          errorMessage = 'Vous devez vous connecter';
+          break;
+        case 403:
+          errorMessage = 'accès réfuse';
+          break;
+        case 404:
+          errorMessage = 'Not find ';
+          break;
+        case 500:
+          errorMessage = 'erreur serveur interne';
+          break;
+        default:
+          errorMessage = `Error: ${error.status} - ${error.message}`;
+      }
+    }
+
+    console.error('Erreur détaillée:', error);
+    return throwError(() => new Error(errorMessage));
   }
 }

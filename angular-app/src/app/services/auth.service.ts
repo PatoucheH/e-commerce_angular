@@ -2,37 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles?: string[];
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-export interface UpdateProfileRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
+import { User } from '../models/user.model';
+import { LoginRequest } from '../models/request-profile/loginRequest.model';
+import { RegisterRequest } from '../models/request-profile/registerRequest.model';
+import { UpdateProfileRequest } from '../models/request-profile/updateProfilRequest.model';
+import { ChangePasswordRequest } from '../models/request-profile/changePasswordrequest.model';
 
 @Injectable({
   providedIn: 'root',

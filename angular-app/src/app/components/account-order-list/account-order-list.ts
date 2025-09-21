@@ -1,8 +1,9 @@
-// orders-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { OrderService, Order, OrderStatus } from '../../services/order.service';
+import { OrderService } from '../../services/order.service';
+import { Order } from '../../models/order/order.model';
+import { OrderStatus } from '../../models/order/orderStatus.model';
 
 @Component({
   selector: 'app-orders-list',

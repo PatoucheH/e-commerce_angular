@@ -1,16 +1,18 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Page d'authentification -->
+  @if(isAuthMode){
+  <app-auth-form
+    (loginSuccess)="onLoginSuccess()"
+    (registerSuccess)="onRegisterSuccess()"
+  >
+  </app-auth-form>
+  }
 
-    <div class="min-h-screen bg-gray-50">
-      <!-- Page d'authentification -->
-      <app-auth-form 
-        *ngIf="isAuthMode"
-        (loginSuccess)="onLoginSuccess()"
-        (registerSuccess)="onRegisterSuccess()">
-      </app-auth-form>
-
-      <!-- Page de profil utilisateur -->
-      <app-user-profile 
-        *ngIf="isProfileMode"
-        [user]="user"
-        (logoutRequested)="onLogoutRequested()">
-      </app-user-profile>
-    </div>
+  <!-- Page de profil utilisateur -->
+  @if(isProfileMode){
+  <app-user-profile [user]="user" (logoutRequested)="onLogoutRequested()">
+  </app-user-profile>
+  } @if(isAdmin){
+  <app-admin-panel></app-admin-panel>
+  }
+</div>
